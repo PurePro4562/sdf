@@ -59,6 +59,56 @@ const GAMES = [
     guide: "ULTRA MEGA SLOTS! Triple matches pay up to 200x! Jackpot symbols trigger MEGA WIN celebrations!"
   },
   { 
+    id: 'ocean-slots', 
+    type: 'ocean-slots', 
+    name: 'Ocean Depths', 
+    colors: 'from-blue-950 via-cyan-950 to-teal-950', 
+    symbols: ['🐚', '💎', '🐙', '🌟', '🌊', '🐟', '⚓', '💠'], 
+    minBet: 15, 
+    icon: <CircleDot className="text-cyan-400" size={32} />,
+    guide: "Dive deep! Triple matches pay up to 150x! Special symbols can trigger BONUS ROUNDS with free spins!"
+  },
+  { 
+    id: 'cosmic-slots', 
+    type: 'cosmic-slots', 
+    name: 'Cosmic Void', 
+    colors: 'from-purple-950 via-indigo-950 to-black', 
+    symbols: ['⭐', '🌌', '🚀', '💫', '🌠', '🪐', '🌙', '✨'], 
+    minBet: 20, 
+    icon: <Sparkles className="text-purple-400" size={32} />,
+    guide: "Journey through space! Triple matches pay up to 200x! Stars can unlock BONUS FREE SPINS!"
+  },
+  { 
+    id: 'pharaoh-slots', 
+    type: 'pharaoh-slots', 
+    name: 'Pharaoh\'s Fortune', 
+    colors: 'from-amber-950 via-yellow-900 to-orange-950', 
+    symbols: ['👑', '💎', '⚱️', '🏺', '🏛️', '🐍', '📜', '🔱'], 
+    minBet: 18, 
+    icon: <Crown className="text-yellow-400" size={32} />,
+    guide: "Unlock ancient treasures! Triple matches pay up to 180x! Pharaoh symbols trigger BONUS ROUNDS!"
+  },
+  { 
+    id: 'cyber-slots', 
+    type: 'cyber-slots', 
+    name: 'Neon Cyber', 
+    colors: 'from-fuchsia-950 via-purple-950 to-indigo-950', 
+    symbols: ['💎', '⚡', '🎮', '🔮', '💜', '🌐', '🤖', '💿'], 
+    minBet: 22, 
+    icon: <Zap className="text-fuchsia-400" size={32} />,
+    guide: "Hack the matrix! Triple matches pay up to 190x! Cyber symbols activate HACK MODE BONUS!"
+  },
+  { 
+    id: 'forest-slots', 
+    type: 'forest-slots', 
+    name: 'Forest Magic', 
+    colors: 'from-green-950 via-emerald-950 to-teal-950', 
+    symbols: ['🍀', '🌿', '🌸', '🌺', '🌳', '🦋', '🌲', '🍄'], 
+    minBet: 16, 
+    icon: <CircleDot className="text-green-400" size={32} />,
+    guide: "Nature's blessing! Triple matches pay up to 170x! Lucky clovers trigger FOREST BLESSING BONUS!"
+  },
+  { 
     id: 'roulette', 
     type: 'roulette', 
     name: 'Prestige Roulette', 
@@ -258,50 +308,118 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
   );
 };
 
-// Sound effects using Web Audio API
-const createSound = (frequency, duration, type = 'sine', volume = 0.3) => {
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  oscillator.frequency.value = frequency;
-  oscillator.type = type;
-  gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-  
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + duration);
+// Enhanced Sound System with more satisfying effects
+let audioContext = null;
+const getAudioContext = () => {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  return audioContext;
 };
 
-const playSpinSound = () => {
-  createSound(200, 0.1, 'sawtooth', 0.2);
-  setTimeout(() => createSound(300, 0.1, 'sawtooth', 0.2), 50);
-  setTimeout(() => createSound(400, 0.1, 'sawtooth', 0.2), 100);
-};
-
-const playWinSound = (multiplier) => {
-  if (multiplier >= 100) {
-    // Mega win sound
-    [440, 554, 659, 784].forEach((freq, i) => {
-      setTimeout(() => createSound(freq, 0.3, 'sine', 0.4), i * 100);
-    });
-  } else if (multiplier >= 50) {
-    // Big win sound
-    [523, 659, 784].forEach((freq, i) => {
-      setTimeout(() => createSound(freq, 0.2, 'sine', 0.3), i * 80);
-    });
-  } else {
-    // Regular win sound
-    createSound(523, 0.15, 'sine', 0.25);
-    setTimeout(() => createSound(659, 0.15, 'sine', 0.25), 100);
+const createSound = (frequency, duration, type = 'sine', volume = 0.3, detune = 0) => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = type;
+    if (detune) oscillator.detune.value = detune;
+    gainNode.gain.setValueAtTime(volume, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + duration);
+  } catch (e) {
+    // Silently fail if audio context not available
   }
 };
 
-const playReelStopSound = () => {
-  createSound(150, 0.05, 'square', 0.15);
+const createChord = (frequencies, duration, type = 'sine', volume = 0.25) => {
+  frequencies.forEach((freq, i) => {
+    setTimeout(() => createSound(freq, duration, type, volume), i * 30);
+  });
+};
+
+const playSpinSound = (theme = 'default') => {
+  const ctx = getAudioContext();
+  if (theme === 'ocean') {
+    createSound(150, 0.08, 'sine', 0.15);
+    setTimeout(() => createSound(200, 0.08, 'sine', 0.15), 40);
+    setTimeout(() => createSound(250, 0.08, 'sine', 0.15), 80);
+  } else if (theme === 'cosmic') {
+    createSound(200, 0.1, 'sine', 0.2, -50);
+    setTimeout(() => createSound(300, 0.1, 'sine', 0.2, 50), 50);
+  } else if (theme === 'egyptian') {
+    createSound(220, 0.12, 'sawtooth', 0.2);
+    setTimeout(() => createSound(330, 0.12, 'sawtooth', 0.2), 60);
+  } else if (theme === 'cyber') {
+    createSound(300, 0.06, 'square', 0.25);
+    setTimeout(() => createSound(400, 0.06, 'square', 0.25), 30);
+    setTimeout(() => createSound(500, 0.06, 'square', 0.25), 60);
+  } else if (theme === 'forest') {
+    createSound(180, 0.1, 'sine', 0.18);
+    setTimeout(() => createSound(240, 0.1, 'sine', 0.18), 50);
+  } else {
+    // Default
+    createSound(200, 0.1, 'sawtooth', 0.2);
+    setTimeout(() => createSound(300, 0.1, 'sawtooth', 0.2), 50);
+    setTimeout(() => createSound(400, 0.1, 'sawtooth', 0.2), 100);
+  }
+};
+
+const playWinSound = (multiplier, theme = 'default') => {
+  if (multiplier >= 200) {
+    // Ultra mega win - epic chord progression
+    createChord([261.63, 329.63, 392.00, 523.25], 0.4, 'sine', 0.35);
+    setTimeout(() => createChord([293.66, 369.99, 440.00, 587.33], 0.4, 'sine', 0.35), 200);
+    setTimeout(() => createChord([329.63, 415.30, 493.88, 659.25], 0.4, 'sine', 0.4), 400);
+  } else if (multiplier >= 100) {
+    // Mega win - satisfying major chord
+    createChord([261.63, 329.63, 392.00], 0.3, 'sine', 0.3);
+    setTimeout(() => createChord([329.63, 415.30, 493.88], 0.3, 'sine', 0.3), 150);
+    setTimeout(() => createChord([392.00, 493.88, 587.33], 0.3, 'sine', 0.35), 300);
+  } else if (multiplier >= 50) {
+    // Big win - pleasant chord
+    createChord([261.63, 329.63, 392.00], 0.25, 'sine', 0.28);
+    setTimeout(() => createChord([329.63, 415.30, 493.88], 0.25, 'sine', 0.28), 120);
+  } else if (multiplier >= 10) {
+    // Medium win
+    createSound(523.25, 0.2, 'sine', 0.25);
+    setTimeout(() => createSound(659.25, 0.2, 'sine', 0.25), 100);
+  } else {
+    // Small win
+    createSound(523.25, 0.15, 'sine', 0.2);
+    setTimeout(() => createSound(659.25, 0.15, 'sine', 0.2), 80);
+  }
+};
+
+const playReelStopSound = (theme = 'default') => {
+  if (theme === 'ocean') {
+    createSound(120, 0.06, 'sine', 0.12);
+  } else if (theme === 'cyber') {
+    createSound(200, 0.04, 'square', 0.2);
+  } else {
+    createSound(150, 0.05, 'square', 0.15);
+  }
+};
+
+const playBonusSound = () => {
+  // Epic bonus round sound
+  createChord([261.63, 329.63, 392.00, 523.25], 0.5, 'sine', 0.4);
+  setTimeout(() => {
+    createChord([329.63, 415.30, 493.88, 659.25], 0.5, 'sine', 0.4);
+  }, 300);
+  setTimeout(() => {
+    createChord([392.00, 493.88, 587.33, 783.99], 0.5, 'sine', 0.45);
+  }, 600);
 };
 
 // Confetti particle component
@@ -365,7 +483,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
     setShowConfetti(false);
     setGlowEffect(false);
     setTokens(t => t - bet);
-    playSpinSound();
+    playSpinSound('default');
     
     const results = [
       symbols[Math.floor(Math.random() * symbols.length)], 
@@ -380,7 +498,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
           n[i] = results[i]; 
           return n; 
         });
-        playReelStopSound();
+        playReelStopSound('default');
         if (i === 2) {
           setTimeout(() => finalize(results), 300);
         }
@@ -423,7 +541,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
     if (mult > 0) {
       setMultiplier(mult);
       setWinMsg(message);
-      playWinSound(mult);
+      playWinSound(mult, 'default');
       
       if (isMegaWin) {
         setShowConfetti(true);
@@ -611,6 +729,1283 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
             >
               {winMsg}
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// ========== THEMED SLOT MACHINES WITH BONUS ROUNDS ==========
+
+// Ocean Depths Slot - Underwater theme with bubbles
+const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [winMsg, setWinMsg] = useState('');
+  const [bet, setBet] = useState(initialMinBet);
+  const [multiplier, setMultiplier] = useState(0);
+  const [inBonus, setInBonus] = useState(false);
+  const [bonusSpins, setBonusSpins] = useState(0);
+  const [bubbles, setBubbles] = useState([]);
+  const containerRef = useRef(null);
+
+  const createBubble = () => {
+    const newBubbles = [];
+    for (let i = 0; i < 30; i++) {
+      newBubbles.push({
+        id: Date.now() + i,
+        x: Math.random() * 100,
+        size: Math.random() * 20 + 10,
+        delay: Math.random() * 2
+      });
+    }
+    setBubbles(prev => [...prev, ...newBubbles]);
+    setTimeout(() => setBubbles([]), 3000);
+  };
+
+  const spin = () => {
+    if (isSpinning || tokens < bet) return;
+    setIsSpinning(true);
+    setWinMsg('');
+    setMultiplier(0);
+    setTokens(t => t - bet);
+    playSpinSound('ocean');
+    createBubble();
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [900, 1800, 3000].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('ocean');
+        if (i === 2) setTimeout(() => finalize(results), 400);
+      }, d);
+    });
+  };
+
+  const finalize = (res) => {
+    setIsSpinning(false);
+    let mult = 0;
+    let message = '';
+    let triggerBonus = false;
+
+    if (res[0] === res[1] && res[1] === res[2]) {
+      if (res[0] === '🐚' || res[0] === '💎') {
+        mult = 150;
+        message = `🌊 TREASURE FOUND! 🌊 +${(bet * mult).toLocaleString()}`;
+      } else if (res[0] === '🐙' || res[0] === '🌟') {
+        mult = 100;
+        message = `🐙 DEEP SEA WIN! 🐙 +${(bet * mult).toLocaleString()}`;
+        triggerBonus = Math.random() < 0.3;
+      } else {
+        mult = 60;
+        message = `🌊 TRIPLE MATCH! 🌊 +${(bet * mult).toLocaleString()}`;
+      }
+      setTokens(t => t + bet * mult);
+    } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
+      mult = 4;
+      message = `✨ DOUBLE WIN! ✨ +${(bet * mult).toLocaleString()}`;
+      setTokens(t => t + bet * mult);
+    }
+
+    if (mult > 0) {
+      setMultiplier(mult);
+      setWinMsg(message);
+      playWinSound(mult, 'ocean');
+      createBubble();
+    }
+
+    if (triggerBonus) {
+      setTimeout(() => startBonusRound(), 1500);
+    }
+  };
+
+  const startBonusRound = () => {
+    playBonusSound();
+    setInBonus(true);
+    setBonusSpins(5);
+    setWinMsg('🎁 BONUS ROUND ACTIVATED! 🎁');
+  };
+
+  const bonusSpin = () => {
+    if (bonusSpins <= 0) {
+      setInBonus(false);
+      return;
+    }
+    setIsSpinning(true);
+    setWinMsg('');
+    setBonusSpins(prev => prev - 1);
+    playSpinSound('ocean');
+    createBubble();
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [800, 1600, 2800].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('ocean');
+        if (i === 2) {
+          setTimeout(() => {
+            setIsSpinning(false);
+            const bonusMult = 10;
+            setTokens(t => t + bet * bonusMult);
+            setWinMsg(`🎁 BONUS WIN! +${(bet * bonusMult).toLocaleString()} (${bonusSpins - 1} spins left)`);
+            playWinSound(bonusMult, 'ocean');
+            createBubble();
+          }, 300);
+        }
+      }, d);
+    });
+  };
+
+  return (
+    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-blue-900/40 via-cyan-900/40 to-teal-900/40 rounded-[4rem] border-2 border-cyan-500/20 relative shadow-[0_0_200px_rgba(0,150,255,0.4)] overflow-hidden">
+      {/* Animated bubbles */}
+      <AnimatePresence>
+        {bubbles.map(bubble => (
+          <motion.div
+            key={bubble.id}
+            initial={{ y: '100%', x: `${bubble.x}%`, opacity: 0.6, scale: 0 }}
+            animate={{ y: '-20%', opacity: [0.6, 1, 0], scale: [0, 1, 1.2] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 3, delay: bubble.delay, ease: "easeOut" }}
+            className="absolute rounded-full border-2 border-cyan-400/50"
+            style={{
+              width: bubble.size,
+              height: bubble.size,
+              background: 'radial-gradient(circle, rgba(0,255,255,0.3), rgba(0,150,255,0.1))',
+              boxShadow: '0 0 20px rgba(0,255,255,0.5)'
+            }}
+          />
+        ))}
+      </AnimatePresence>
+
+      {/* Wave effect background */}
+      <motion.div
+        animate={{ x: [0, 100, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{
+          background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,255,255,0.1) 10px, rgba(0,255,255,0.1) 20px)'
+        }}
+      />
+
+      <div className="relative flex gap-4 md:gap-8 bg-black/50 p-6 rounded-[2.5rem] border-2 border-cyan-400/30 backdrop-blur-xl">
+        {reels.map((symbol, i) => (
+          <motion.div
+            key={`${symbol}-${i}-${isSpinning}`}
+            className="relative w-32 h-52 md:w-40 md:h-64 bg-gradient-to-b from-blue-900 via-cyan-900 to-teal-900 rounded-[2rem] overflow-hidden border-2 border-cyan-400/40 flex items-center justify-center"
+            animate={isSpinning ? {
+              scale: [1, 1.05, 1],
+              boxShadow: [
+                '0 0 20px rgba(0,255,255,0.4)',
+                '0 0 40px rgba(0,255,255,0.8)',
+                '0 0 20px rgba(0,255,255,0.4)'
+              ]
+            } : {}}
+            transition={{ duration: 0.15, repeat: isSpinning ? Infinity : 0 }}
+          >
+            <motion.div
+              key={isSpinning ? `spin-${i}` : `stop-${i}`}
+              initial={isSpinning ? { y: -600 } : { y: 0 }}
+              animate={isSpinning ? { y: [0, 600], rotate: [0, 180] } : { y: 0, scale: [1, 1.2, 1] }}
+              transition={isSpinning ? { duration: 0.1, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_30px_rgba(0,255,255,0.6)]'}`}
+            >
+              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+            </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/50 via-transparent to-teal-900/50 pointer-events-none" />
+          </motion.div>
+        ))}
+      </div>
+
+      {multiplier > 0 && (
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: [0, 1.5, 1], rotate: 0 }}
+          className="absolute top-20 text-8xl font-black text-cyan-400"
+          style={{ textShadow: '0 0 40px rgba(0,255,255,0.8)' }}
+        >
+          {multiplier}x
+        </motion.div>
+      )}
+
+      {inBonus && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          className="absolute top-4 bg-gradient-to-r from-cyan-400 to-teal-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_30px_rgba(0,255,255,0.8)]"
+        >
+          🎁 BONUS: {bonusSpins} SPINS 🎁
+        </motion.div>
+      )}
+
+      <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={isSpinning} />
+      
+      <button
+        onClick={inBonus ? bonusSpin : spin}
+        disabled={isSpinning}
+        className="group relative w-full h-32 rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all"
+      >
+        <motion.div
+          animate={isSpinning ? {
+            background: [
+              'linear-gradient(90deg, #00ffff, #0080ff, #00ffff)',
+              'linear-gradient(90deg, #0080ff, #00ffff, #0080ff)'
+            ]
+          } : {}}
+          transition={{ duration: 0.3, repeat: isSpinning ? Infinity : 0 }}
+          className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 group-hover:from-cyan-300 group-hover:via-blue-300 group-hover:to-teal-300"
+        />
+        <span className="relative z-10 text-black font-black text-5xl italic uppercase tracking-[0.3em]">
+          {inBonus ? '🌊 BONUS SPIN 🌊' : isSpinning ? '🌊 SPINNING... 🌊' : '🌊 DIVE IN 🌊'}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {winMsg && (
+          <motion.div
+            initial={{ scale: 0, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute -top-8 bg-gradient-to-r from-cyan-400 to-teal-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(0,255,255,0.8)] border-4 border-white/50"
+          >
+            {winMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Cosmic Void Slot - Space theme with stars and nebulas
+const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [winMsg, setWinMsg] = useState('');
+  const [bet, setBet] = useState(initialMinBet);
+  const [multiplier, setMultiplier] = useState(0);
+  const [inBonus, setInBonus] = useState(false);
+  const [bonusSpins, setBonusSpins] = useState(0);
+  const [stars, setStars] = useState([]);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const newStars = [];
+    for (let i = 0; i < 50; i++) {
+      newStars.push({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 3 + 1,
+        delay: Math.random() * 5
+      });
+    }
+    setStars(newStars);
+  }, []);
+
+  const createStarBurst = () => {
+    const bursts = [];
+    for (let i = 0; i < 40; i++) {
+      bursts.push({
+        id: Date.now() + i,
+        x: 50 + (Math.random() - 0.5) * 30,
+        y: 50 + (Math.random() - 0.5) * 30,
+        angle: (Math.PI * 2 * i) / 40,
+        distance: Math.random() * 200 + 100
+      });
+    }
+    return bursts;
+  };
+
+  const spin = () => {
+    if (isSpinning || tokens < bet) return;
+    setIsSpinning(true);
+    setWinMsg('');
+    setMultiplier(0);
+    setTokens(t => t - bet);
+    playSpinSound('cosmic');
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [1000, 2000, 3200].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('default');
+        if (i === 2) setTimeout(() => finalize(results), 400);
+      }, d);
+    });
+  };
+
+  const finalize = (res) => {
+    setIsSpinning(false);
+    let mult = 0;
+    let message = '';
+    let triggerBonus = false;
+
+    if (res[0] === res[1] && res[1] === res[2]) {
+      if (res[0] === '⭐' || res[0] === '🌌') {
+        mult = 200;
+        message = `⭐ COSMIC JACKPOT! ⭐ +${(bet * mult).toLocaleString()}`;
+        triggerBonus = Math.random() < 0.25;
+      } else if (res[0] === '🚀' || res[0] === '💫') {
+        mult = 120;
+        message = `🚀 GALACTIC WIN! 🚀 +${(bet * mult).toLocaleString()}`;
+      } else {
+        mult = 70;
+        message = `✨ TRIPLE MATCH! ✨ +${(bet * mult).toLocaleString()}`;
+      }
+      setTokens(t => t + bet * mult);
+    } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
+      mult = 5;
+      message = `🌟 DOUBLE WIN! 🌟 +${(bet * mult).toLocaleString()}`;
+      setTokens(t => t + bet * mult);
+    }
+
+    if (mult > 0) {
+      setMultiplier(mult);
+      setWinMsg(message);
+      playWinSound(mult, 'cosmic');
+    }
+
+    if (triggerBonus) {
+      setTimeout(() => startBonusRound(), 1500);
+    }
+  };
+
+  const startBonusRound = () => {
+    playBonusSound();
+    setInBonus(true);
+    setBonusSpins(7);
+    setWinMsg('🌌 BONUS ROUND: FREE SPINS! 🌌');
+  };
+
+  const bonusSpin = () => {
+    if (bonusSpins <= 0) {
+      setInBonus(false);
+      return;
+    }
+    setIsSpinning(true);
+    setWinMsg('');
+    setBonusSpins(prev => prev - 1);
+    playSpinSound('cosmic');
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [800, 1600, 2800].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        if (i === 2) {
+          setTimeout(() => {
+            setIsSpinning(false);
+            const bonusMult = 15;
+            setTokens(t => t + bet * bonusMult);
+            setWinMsg(`🌌 BONUS WIN! +${(bet * bonusMult).toLocaleString()} (${bonusSpins - 1} left)`);
+            playWinSound(bonusMult, 'cosmic');
+          }, 300);
+        }
+      }, d);
+    });
+  };
+
+  return (
+    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-black/60 rounded-[4rem] border-2 border-purple-500/20 relative shadow-[0_0_200px_rgba(138,43,226,0.5)] overflow-hidden">
+      {/* Animated stars */}
+      {stars.map(star => (
+        <motion.div
+          key={star.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 3, delay: star.delay, repeat: Infinity }}
+          className="absolute rounded-full bg-white"
+          style={{
+            left: `${star.x}%`,
+            top: `${star.y}%`,
+            width: star.size,
+            height: star.size,
+            boxShadow: '0 0 10px rgba(255,255,255,0.8)'
+          }}
+        />
+      ))}
+
+      {/* Nebula effect */}
+      <motion.div
+        animate={{ 
+          backgroundPosition: ['0% 0%', '100% 100%'],
+          opacity: [0.3, 0.6, 0.3]
+        }}
+        transition={{ duration: 8, repeat: Infinity }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at 30% 50%, rgba(138,43,226,0.4), transparent 50%), radial-gradient(ellipse at 70% 50%, rgba(75,0,130,0.4), transparent 50%)',
+          backgroundSize: '200% 200%'
+        }}
+      />
+
+      <div className="relative flex gap-4 md:gap-8 bg-black/60 p-6 rounded-[2.5rem] border-2 border-purple-400/30 backdrop-blur-xl">
+        {reels.map((symbol, i) => (
+          <motion.div
+            key={`${symbol}-${i}-${isSpinning}`}
+            className="relative w-32 h-52 md:w-40 md:h-64 bg-gradient-to-b from-purple-900 via-indigo-900 to-black rounded-[2rem] overflow-hidden border-2 border-purple-400/40 flex items-center justify-center"
+            animate={isSpinning ? {
+              scale: [1, 1.08, 1],
+              boxShadow: [
+                '0 0 30px rgba(138,43,226,0.5)',
+                '0 0 60px rgba(138,43,226,0.9)',
+                '0 0 30px rgba(138,43,226,0.5)'
+              ]
+            } : {}}
+            transition={{ duration: 0.12, repeat: isSpinning ? Infinity : 0 }}
+          >
+            <motion.div
+              key={isSpinning ? `spin-${i}` : `stop-${i}`}
+              initial={isSpinning ? { y: -600, rotate: 0 } : { y: 0 }}
+              animate={isSpinning ? { y: [0, 600], rotate: [0, 360] } : { y: 0, scale: [1, 1.3, 1] }}
+              transition={isSpinning ? { duration: 0.09, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-md opacity-30' : 'drop-shadow-[0_0_40px_rgba(138,43,226,0.8)]'}`}
+              style={{
+                filter: isSpinning ? 'none' : 'brightness(1.2)',
+                textShadow: isSpinning ? 'none' : '0 0 30px currentColor, 0 0 60px currentColor'
+              }}
+            >
+              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+            </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-900/40 via-transparent to-black/60 pointer-events-none" />
+          </motion.div>
+        ))}
+      </div>
+
+      {multiplier > 0 && (
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: [0, 1.5, 1], rotate: 0 }}
+          className="absolute top-20 text-8xl font-black text-purple-400"
+          style={{ textShadow: '0 0 50px rgba(138,43,226,0.9)' }}
+        >
+          {multiplier}x
+        </motion.div>
+      )}
+
+      {inBonus && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          className="absolute top-4 bg-gradient-to-r from-purple-400 to-pink-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_40px_rgba(138,43,226,0.9)]"
+        >
+          🌌 BONUS: {bonusSpins} FREE SPINS 🌌
+        </motion.div>
+      )}
+
+      <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={isSpinning} />
+      
+      <button
+        onClick={inBonus ? bonusSpin : spin}
+        disabled={isSpinning}
+        className="group relative w-full h-32 rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all"
+      >
+        <motion.div
+          animate={isSpinning ? {
+            background: [
+              'linear-gradient(90deg, #8a2be2, #ff00ff, #8a2be2)',
+              'linear-gradient(90deg, #ff00ff, #8a2be2, #ff00ff)'
+            ]
+          } : {}}
+          transition={{ duration: 0.3, repeat: isSpinning ? Infinity : 0 }}
+          className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 group-hover:from-purple-300 group-hover:via-pink-300 group-hover:to-indigo-300"
+        />
+        <span className="relative z-10 text-black font-black text-5xl italic uppercase tracking-[0.3em]">
+          {inBonus ? '🌌 BONUS SPIN 🌌' : isSpinning ? '🌌 SPINNING... 🌌' : '🌌 LAUNCH 🌌'}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {winMsg && (
+          <motion.div
+            initial={{ scale: 0, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute -top-8 bg-gradient-to-r from-purple-400 to-pink-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_60px_rgba(138,43,226,0.9)] border-4 border-white/50"
+          >
+            {winMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Pharaoh's Fortune Slot - Egyptian theme
+const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [winMsg, setWinMsg] = useState('');
+  const [bet, setBet] = useState(initialMinBet);
+  const [multiplier, setMultiplier] = useState(0);
+  const [inBonus, setInBonus] = useState(false);
+  const [bonusSpins, setBonusSpins] = useState(0);
+  const [sandParticles, setSandParticles] = useState([]);
+  const containerRef = useRef(null);
+
+  const createSandStorm = () => {
+    const particles = [];
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        id: Date.now() + i,
+        x: Math.random() * 100,
+        y: -10,
+        size: Math.random() * 4 + 2,
+        speed: Math.random() * 3 + 2
+      });
+    }
+    setSandParticles(particles);
+    setTimeout(() => setSandParticles([]), 2000);
+  };
+
+  const spin = () => {
+    if (isSpinning || tokens < bet) return;
+    setIsSpinning(true);
+    setWinMsg('');
+    setMultiplier(0);
+    setTokens(t => t - bet);
+    playSpinSound('egyptian');
+    createSandStorm();
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [950, 1900, 3100].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('default');
+        if (i === 2) setTimeout(() => finalize(results), 400);
+      }, d);
+    });
+  };
+
+  const finalize = (res) => {
+    setIsSpinning(false);
+    let mult = 0;
+    let message = '';
+    let triggerBonus = false;
+
+    if (res[0] === res[1] && res[1] === res[2]) {
+      if (res[0] === '👑' || res[0] === '💎') {
+        mult = 180;
+        message = `👑 PHARAOH'S TREASURE! 👑 +${(bet * mult).toLocaleString()}`;
+        triggerBonus = Math.random() < 0.3;
+      } else if (res[0] === '⚱️' || res[0] === '🏺') {
+        mult = 110;
+        message = `⚱️ ANCIENT RICHES! ⚱️ +${(bet * mult).toLocaleString()}`;
+      } else {
+        mult = 65;
+        message = `🏛️ TRIPLE MATCH! 🏛️ +${(bet * mult).toLocaleString()}`;
+      }
+      setTokens(t => t + bet * mult);
+    } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
+      mult = 4;
+      message = `✨ DOUBLE WIN! ✨ +${(bet * mult).toLocaleString()}`;
+      setTokens(t => t + bet * mult);
+    }
+
+    if (mult > 0) {
+      setMultiplier(mult);
+      setWinMsg(message);
+      playWinSound(mult, 'egyptian');
+      createSandStorm();
+    }
+
+    if (triggerBonus) {
+      setTimeout(() => startBonusRound(), 1500);
+    }
+  };
+
+  const startBonusRound = () => {
+    playBonusSound();
+    setInBonus(true);
+    setBonusSpins(6);
+    setWinMsg('🏺 BONUS ROUND: PHARAOH BLESSING! 🏺');
+  };
+
+  const bonusSpin = () => {
+    if (bonusSpins <= 0) {
+      setInBonus(false);
+      return;
+    }
+    setIsSpinning(true);
+    setWinMsg('');
+    setBonusSpins(prev => prev - 1);
+    playSpinSound('egyptian');
+    createSandStorm();
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [800, 1600, 2800].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        if (i === 2) {
+          setTimeout(() => {
+            setIsSpinning(false);
+            const bonusMult = 12;
+            setTokens(t => t + bet * bonusMult);
+            setWinMsg(`🏺 BONUS WIN! +${(bet * bonusMult).toLocaleString()} (${bonusSpins - 1} left)`);
+            playWinSound(bonusMult, 'egyptian');
+          }, 300);
+        }
+      }, d);
+    });
+  };
+
+  return (
+    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-amber-900/40 via-yellow-800/40 to-orange-900/40 rounded-[4rem] border-2 border-yellow-500/20 relative shadow-[0_0_200px_rgba(255,215,0,0.4)] overflow-hidden">
+      {/* Sand particles */}
+      <AnimatePresence>
+        {sandParticles.map(particle => (
+          <motion.div
+            key={particle.id}
+            initial={{ y: particle.y + '%', x: `${particle.x}%`, opacity: 0.7 }}
+            animate={{ y: '110%', x: `${particle.x + (Math.random() - 0.5) * 20}%`, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: particle.speed, ease: "linear" }}
+            className="absolute rounded-full bg-yellow-600/60"
+            style={{ width: particle.size, height: particle.size }}
+          />
+        ))}
+      </AnimatePresence>
+
+      {/* Pyramid gradient effect */}
+      <motion.div
+        animate={{ opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 4, repeat: Infinity }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, transparent 0%, rgba(255,215,0,0.1) 50%, transparent 100%)',
+          clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+        }}
+      />
+
+      <div className="relative flex gap-4 md:gap-8 bg-black/60 p-6 rounded-[2.5rem] border-2 border-yellow-500/30 backdrop-blur-xl">
+        {reels.map((symbol, i) => (
+          <motion.div
+            key={`${symbol}-${i}-${isSpinning}`}
+            className="relative w-32 h-52 md:w-40 md:h-64 bg-gradient-to-b from-amber-900 via-yellow-800 to-orange-900 rounded-[2rem] overflow-hidden border-2 border-yellow-500/40 flex items-center justify-center"
+            animate={isSpinning ? {
+              scale: [1, 1.1, 1],
+              boxShadow: [
+                '0 0 25px rgba(255,215,0,0.5)',
+                '0 0 50px rgba(255,215,0,0.9)',
+                '0 0 25px rgba(255,215,0,0.5)'
+              ]
+            } : {}}
+            transition={{ duration: 0.1, repeat: isSpinning ? Infinity : 0 }}
+          >
+            <motion.div
+              key={isSpinning ? `spin-${i}` : `stop-${i}`}
+              initial={isSpinning ? { y: -600 } : { y: 0 }}
+              animate={isSpinning ? { y: [0, 600], rotate: [0, -180] } : { y: 0, scale: [1, 1.25, 1] }}
+              transition={isSpinning ? { duration: 0.1, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(255,215,0,0.7)]'}`}
+            >
+              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+            </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-b from-amber-900/50 via-transparent to-orange-900/50 pointer-events-none" />
+          </motion.div>
+        ))}
+      </div>
+
+      {multiplier > 0 && (
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: [0, 1.5, 1], rotate: 0 }}
+          className="absolute top-20 text-8xl font-black text-yellow-400"
+          style={{ textShadow: '0 0 40px rgba(255,215,0,0.9)' }}
+        >
+          {multiplier}x
+        </motion.div>
+      )}
+
+      {inBonus && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          className="absolute top-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_40px_rgba(255,215,0,0.9)]"
+        >
+          🏺 BONUS: {bonusSpins} SPINS 🏺
+        </motion.div>
+      )}
+
+      <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={isSpinning} />
+      
+      <button
+        onClick={inBonus ? bonusSpin : spin}
+        disabled={isSpinning}
+        className="group relative w-full h-32 rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all"
+      >
+        <motion.div
+          animate={isSpinning ? {
+            background: [
+              'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
+              'linear-gradient(90deg, #ff8c00, #ffd700, #ff8c00)'
+            ]
+          } : {}}
+          transition={{ duration: 0.3, repeat: isSpinning ? Infinity : 0 }}
+          className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-400 group-hover:from-yellow-300 group-hover:via-orange-300 group-hover:to-amber-300"
+        />
+        <span className="relative z-10 text-black font-black text-5xl italic uppercase tracking-[0.3em]">
+          {inBonus ? '🏺 BONUS SPIN 🏺' : isSpinning ? '🏛️ SPINNING... 🏛️' : '🏺 UNLOCK 🏺'}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {winMsg && (
+          <motion.div
+            initial={{ scale: 0, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute -top-8 bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(255,215,0,0.9)] border-4 border-white/50"
+          >
+            {winMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Neon Cyber Slot - Cyberpunk theme
+const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [winMsg, setWinMsg] = useState('');
+  const [bet, setBet] = useState(initialMinBet);
+  const [multiplier, setMultiplier] = useState(0);
+  const [inBonus, setInBonus] = useState(false);
+  const [bonusSpins, setBonusSpins] = useState(0);
+  const [glitchLines, setGlitchLines] = useState([]);
+  const containerRef = useRef(null);
+
+  const createGlitch = () => {
+    const lines = [];
+    for (let i = 0; i < 10; i++) {
+      lines.push({
+        id: Date.now() + i,
+        y: Math.random() * 100,
+        height: Math.random() * 5 + 2,
+        delay: Math.random() * 0.3
+      });
+    }
+    setGlitchLines(lines);
+    setTimeout(() => setGlitchLines([]), 300);
+  };
+
+  const spin = () => {
+    if (isSpinning || tokens < bet) return;
+    setIsSpinning(true);
+    setWinMsg('');
+    setMultiplier(0);
+    setTokens(t => t - bet);
+    playSpinSound('cyber');
+    createGlitch();
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [700, 1400, 2400].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('cyber');
+        createGlitch();
+        if (i === 2) setTimeout(() => finalize(results), 300);
+      }, d);
+    });
+  };
+
+  const finalize = (res) => {
+    setIsSpinning(false);
+    let mult = 0;
+    let message = '';
+    let triggerBonus = false;
+
+    if (res[0] === res[1] && res[1] === res[2]) {
+      if (res[0] === '💎' || res[0] === '⚡') {
+        mult = 190;
+        message = `⚡ CYBER JACKPOT! ⚡ +${(bet * mult).toLocaleString()}`;
+        triggerBonus = Math.random() < 0.35;
+      } else if (res[0] === '🎮' || res[0] === '🔮') {
+        mult = 115;
+        message = `🎮 NEON WIN! 🎮 +${(bet * mult).toLocaleString()}`;
+      } else {
+        mult = 68;
+        message = `💜 TRIPLE MATCH! 💜 +${(bet * mult).toLocaleString()}`;
+      }
+      setTokens(t => t + bet * mult);
+    } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
+      mult = 4;
+      message = `✨ DOUBLE WIN! ✨ +${(bet * mult).toLocaleString()}`;
+      setTokens(t => t + bet * mult);
+    }
+
+    if (mult > 0) {
+      setMultiplier(mult);
+      setWinMsg(message);
+      playWinSound(mult, 'cyber');
+      createGlitch();
+    }
+
+    if (triggerBonus) {
+      setTimeout(() => startBonusRound(), 1500);
+    }
+  };
+
+  const startBonusRound = () => {
+    playBonusSound();
+    setInBonus(true);
+    setBonusSpins(8);
+    setWinMsg('🔮 BONUS ROUND: HACK MODE! 🔮');
+  };
+
+  const bonusSpin = () => {
+    if (bonusSpins <= 0) {
+      setInBonus(false);
+      return;
+    }
+    setIsSpinning(true);
+    setWinMsg('');
+    setBonusSpins(prev => prev - 1);
+    playSpinSound('cyber');
+    createGlitch();
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [700, 1400, 2400].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        createGlitch();
+        if (i === 2) {
+          setTimeout(() => {
+            setIsSpinning(false);
+            const bonusMult = 18;
+            setTokens(t => t + bet * bonusMult);
+            setWinMsg(`🔮 BONUS WIN! +${(bet * bonusMult).toLocaleString()} (${bonusSpins - 1} left)`);
+            playWinSound(bonusMult, 'cyber');
+          }, 300);
+        }
+      }, d);
+    });
+  };
+
+  return (
+    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-fuchsia-900/40 via-purple-900/40 to-indigo-900/40 rounded-[4rem] border-2 border-fuchsia-500/20 relative shadow-[0_0_200px_rgba(255,0,255,0.5)] overflow-hidden">
+      {/* Glitch lines */}
+      <AnimatePresence>
+        {glitchLines.map(line => (
+          <motion.div
+            key={line.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: [0, 1, 0], x: [0, 20, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, delay: line.delay }}
+            className="absolute w-full bg-fuchsia-400/30"
+            style={{
+              top: `${line.y}%`,
+              height: line.height,
+              boxShadow: '0 0 10px rgba(255,0,255,0.5)'
+            }}
+          />
+        ))}
+      </AnimatePresence>
+
+      {/* Scan line effect */}
+      <motion.div
+        animate={{ y: ['0%', '100%'] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to bottom, transparent 0%, rgba(255,0,255,0.1) 50%, transparent 100%)',
+          height: '2px'
+        }}
+      />
+
+      <div className="relative flex gap-4 md:gap-8 bg-black/70 p-6 rounded-[2.5rem] border-2 border-fuchsia-400/30 backdrop-blur-xl">
+        {reels.map((symbol, i) => (
+          <motion.div
+            key={`${symbol}-${i}-${isSpinning}`}
+            className="relative w-32 h-52 md:w-40 md:h-64 bg-gradient-to-b from-fuchsia-900 via-purple-900 to-indigo-900 rounded-[2rem] overflow-hidden border-2 border-fuchsia-400/40 flex items-center justify-center"
+            animate={isSpinning ? {
+              scale: [1, 1.12, 1],
+              boxShadow: [
+                '0 0 30px rgba(255,0,255,0.6)',
+                '0 0 70px rgba(255,0,255,1)',
+                '0 0 30px rgba(255,0,255,0.6)'
+              ],
+              filter: ['brightness(1)', 'brightness(1.5)', 'brightness(1)']
+            } : {}}
+            transition={{ duration: 0.08, repeat: isSpinning ? Infinity : 0 }}
+          >
+            <motion.div
+              key={isSpinning ? `spin-${i}` : `stop-${i}`}
+              initial={isSpinning ? { y: -600, x: 0 } : { y: 0 }}
+              animate={isSpinning ? { 
+                y: [0, 600], 
+                rotate: [0, 360],
+                x: [0, Math.random() * 10 - 5, 0]
+              } : { y: 0, scale: [1, 1.3, 1] }}
+              transition={isSpinning ? { duration: 0.07, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-[2px] opacity-35' : 'drop-shadow-[0_0_50px_rgba(255,0,255,0.9)]'}`}
+              style={{
+                filter: isSpinning ? 'none' : 'brightness(1.3) contrast(1.2)',
+                textShadow: isSpinning ? 'none' : '0 0 30px currentColor, 0 0 70px currentColor'
+              }}
+            >
+              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+            </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-b from-fuchsia-900/50 via-transparent to-indigo-900/50 pointer-events-none" />
+          </motion.div>
+        ))}
+      </div>
+
+      {multiplier > 0 && (
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: [0, 1.5, 1], rotate: 0 }}
+          className="absolute top-20 text-8xl font-black text-fuchsia-400"
+          style={{ textShadow: '0 0 50px rgba(255,0,255,1)' }}
+        >
+          {multiplier}x
+        </motion.div>
+      )}
+
+      {inBonus && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          className="absolute top-4 bg-gradient-to-r from-fuchsia-400 to-purple-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_50px_rgba(255,0,255,1)]"
+        >
+          🔮 BONUS: {bonusSpins} SPINS 🔮
+        </motion.div>
+      )}
+
+      <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={isSpinning} />
+      
+      <button
+        onClick={inBonus ? bonusSpin : spin}
+        disabled={isSpinning}
+        className="group relative w-full h-32 rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all"
+      >
+        <motion.div
+          animate={isSpinning ? {
+            background: [
+              'linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff)',
+              'linear-gradient(90deg, #00ffff, #ff00ff, #00ffff)'
+            ]
+          } : {}}
+          transition={{ duration: 0.2, repeat: isSpinning ? Infinity : 0 }}
+          className="absolute inset-0 bg-gradient-to-r from-fuchsia-400 via-purple-400 to-cyan-400 group-hover:from-fuchsia-300 group-hover:via-purple-300 group-hover:to-cyan-300"
+        />
+        <span className="relative z-10 text-black font-black text-5xl italic uppercase tracking-[0.3em]">
+          {inBonus ? '🔮 BONUS SPIN 🔮' : isSpinning ? '⚡ SPINNING... ⚡' : '⚡ HACK ⚡'}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {winMsg && (
+          <motion.div
+            initial={{ scale: 0, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute -top-8 bg-gradient-to-r from-fuchsia-400 to-purple-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_60px_rgba(255,0,255,1)] border-4 border-white/50"
+          >
+            {winMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Forest Magic Slot - Nature theme
+const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [winMsg, setWinMsg] = useState('');
+  const [bet, setBet] = useState(initialMinBet);
+  const [multiplier, setMultiplier] = useState(0);
+  const [inBonus, setInBonus] = useState(false);
+  const [bonusSpins, setBonusSpins] = useState(0);
+  const [leaves, setLeaves] = useState([]);
+  const containerRef = useRef(null);
+
+  const createLeafFall = () => {
+    const newLeaves = [];
+    for (let i = 0; i < 40; i++) {
+      newLeaves.push({
+        id: Date.now() + i,
+        x: Math.random() * 100,
+        y: -10,
+        size: Math.random() * 15 + 10,
+        rotation: Math.random() * 360,
+        delay: Math.random() * 0.5
+      });
+    }
+    setLeaves(newLeaves);
+    setTimeout(() => setLeaves([]), 3000);
+  };
+
+  const spin = () => {
+    if (isSpinning || tokens < bet) return;
+    setIsSpinning(true);
+    setWinMsg('');
+    setMultiplier(0);
+    setTokens(t => t - bet);
+    playSpinSound('forest');
+    createLeafFall();
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [850, 1700, 2900].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('default');
+        if (i === 2) setTimeout(() => finalize(results), 400);
+      }, d);
+    });
+  };
+
+  const finalize = (res) => {
+    setIsSpinning(false);
+    let mult = 0;
+    let message = '';
+    let triggerBonus = false;
+
+    if (res[0] === res[1] && res[1] === res[2]) {
+      if (res[0] === '🍀' || res[0] === '🌿') {
+        mult = 170;
+        message = `🍀 NATURE'S BLESSING! 🍀 +${(bet * mult).toLocaleString()}`;
+        triggerBonus = Math.random() < 0.28;
+      } else if (res[0] === '🌸' || res[0] === '🌺') {
+        mult = 105;
+        message = `🌸 FLOWER POWER! 🌸 +${(bet * mult).toLocaleString()}`;
+      } else {
+        mult = 62;
+        message = `🌳 TRIPLE MATCH! 🌳 +${(bet * mult).toLocaleString()}`;
+      }
+      setTokens(t => t + bet * mult);
+    } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
+      mult = 4;
+      message = `✨ DOUBLE WIN! ✨ +${(bet * mult).toLocaleString()}`;
+      setTokens(t => t + bet * mult);
+    }
+
+    if (mult > 0) {
+      setMultiplier(mult);
+      setWinMsg(message);
+      playWinSound(mult, 'forest');
+      createLeafFall();
+    }
+
+    if (triggerBonus) {
+      setTimeout(() => startBonusRound(), 1500);
+    }
+  };
+
+  const startBonusRound = () => {
+    playBonusSound();
+    setInBonus(true);
+    setBonusSpins(6);
+    setWinMsg('🌿 BONUS ROUND: FOREST BLESSING! 🌿');
+  };
+
+  const bonusSpin = () => {
+    if (bonusSpins <= 0) {
+      setInBonus(false);
+      return;
+    }
+    setIsSpinning(true);
+    setWinMsg('');
+    setBonusSpins(prev => prev - 1);
+    playSpinSound('forest');
+    createLeafFall();
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [800, 1600, 2800].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        if (i === 2) {
+          setTimeout(() => {
+            setIsSpinning(false);
+            const bonusMult = 14;
+            setTokens(t => t + bet * bonusMult);
+            setWinMsg(`🌿 BONUS WIN! +${(bet * bonusMult).toLocaleString()} (${bonusSpins - 1} left)`);
+            playWinSound(bonusMult, 'forest');
+          }, 300);
+        }
+      }, d);
+    });
+  };
+
+  return (
+    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-green-900/40 via-emerald-900/40 to-teal-900/40 rounded-[4rem] border-2 border-green-500/20 relative shadow-[0_0_200px_rgba(0,255,0,0.4)] overflow-hidden">
+      {/* Falling leaves */}
+      <AnimatePresence>
+        {leaves.map(leaf => (
+          <motion.div
+            key={leaf.id}
+            initial={{ y: leaf.y + '%', x: `${leaf.x}%`, rotate: leaf.rotation, opacity: 0.8 }}
+            animate={{ 
+              y: '110%', 
+              x: `${leaf.x + (Math.random() - 0.5) * 30}%`, 
+              rotate: leaf.rotation + 360,
+              opacity: 0
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 3, delay: leaf.delay, ease: "easeInOut" }}
+            className="absolute text-2xl"
+            style={{ filter: 'drop-shadow(0 0 5px rgba(0,255,0,0.5))' }}
+          >
+            🍃
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Sunlight rays */}
+      <motion.div
+        animate={{ 
+          rotate: [0, 360],
+          opacity: [0.1, 0.3, 0.1]
+        }}
+        transition={{ duration: 8, repeat: Infinity }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'conic-gradient(from 0deg, transparent, rgba(255,255,0,0.1), transparent)',
+          clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+        }}
+      />
+
+      <div className="relative flex gap-4 md:gap-8 bg-black/60 p-6 rounded-[2.5rem] border-2 border-green-400/30 backdrop-blur-xl">
+        {reels.map((symbol, i) => (
+          <motion.div
+            key={`${symbol}-${i}-${isSpinning}`}
+            className="relative w-32 h-52 md:w-40 md:h-64 bg-gradient-to-b from-green-900 via-emerald-900 to-teal-900 rounded-[2rem] overflow-hidden border-2 border-green-400/40 flex items-center justify-center"
+            animate={isSpinning ? {
+              scale: [1, 1.1, 1],
+              boxShadow: [
+                '0 0 25px rgba(0,255,0,0.5)',
+                '0 0 55px rgba(0,255,0,0.9)',
+                '0 0 25px rgba(0,255,0,0.5)'
+              ]
+            } : {}}
+            transition={{ duration: 0.1, repeat: isSpinning ? Infinity : 0 }}
+          >
+            <motion.div
+              key={isSpinning ? `spin-${i}` : `stop-${i}`}
+              initial={isSpinning ? { y: -600 } : { y: 0 }}
+              animate={isSpinning ? { y: [0, 600], rotate: [0, 180] } : { y: 0, scale: [1, 1.2, 1] }}
+              transition={isSpinning ? { duration: 0.1, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(0,255,0,0.7)]'}`}
+            >
+              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+            </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-b from-green-900/50 via-transparent to-teal-900/50 pointer-events-none" />
+          </motion.div>
+        ))}
+      </div>
+
+      {multiplier > 0 && (
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: [0, 1.5, 1], rotate: 0 }}
+          className="absolute top-20 text-8xl font-black text-green-400"
+          style={{ textShadow: '0 0 40px rgba(0,255,0,0.9)' }}
+        >
+          {multiplier}x
+        </motion.div>
+      )}
+
+      {inBonus && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          className="absolute top-4 bg-gradient-to-r from-green-400 to-emerald-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_40px_rgba(0,255,0,0.9)]"
+        >
+          🌿 BONUS: {bonusSpins} SPINS 🌿
+        </motion.div>
+      )}
+
+      <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={isSpinning} />
+      
+      <button
+        onClick={inBonus ? bonusSpin : spin}
+        disabled={isSpinning}
+        className="group relative w-full h-32 rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all"
+      >
+        <motion.div
+          animate={isSpinning ? {
+            background: [
+              'linear-gradient(90deg, #00ff00, #00ff88, #00ff00)',
+              'linear-gradient(90deg, #00ff88, #00ff00, #00ff88)'
+            ]
+          } : {}}
+          transition={{ duration: 0.3, repeat: isSpinning ? Infinity : 0 }}
+          className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 group-hover:from-green-300 group-hover:via-emerald-300 group-hover:to-teal-300"
+        />
+        <span className="relative z-10 text-black font-black text-5xl italic uppercase tracking-[0.3em]">
+          {inBonus ? '🌿 BONUS SPIN 🌿' : isSpinning ? '🌳 SPINNING... 🌳' : '🌿 SPIN 🌿'}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {winMsg && (
+          <motion.div
+            initial={{ scale: 0, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute -top-8 bg-gradient-to-r from-green-400 to-emerald-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(0,255,0,0.9)] border-4 border-white/50"
+          >
+            {winMsg}
           </motion.div>
         )}
       </AnimatePresence>
@@ -954,6 +2349,11 @@ export default function App() {
               {activeGame.type === 'blackjack' && <BlackjackTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
               {activeGame.type === 'slots' && <SlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
               {activeGame.type === 'mega-slots' && <MegaSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
+              {activeGame.type === 'ocean-slots' && <OceanSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
+              {activeGame.type === 'cosmic-slots' && <CosmicSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
+              {activeGame.type === 'pharaoh-slots' && <PharaohSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
+              {activeGame.type === 'cyber-slots' && <CyberSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
+              {activeGame.type === 'forest-slots' && <ForestSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
               {activeGame.type === 'roulette' && <RouletteTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
               <div className="w-full max-w-3xl bg-zinc-900/50 border border-white/5 p-12 rounded-[3rem] flex flex-col md:flex-row gap-10">
                 <div className="w-20 h-20 bg-white/5 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-white/5"><Info className="text-zinc-400" size={32} /></div>
