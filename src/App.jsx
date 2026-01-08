@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useGoogleLogin } from '@react-oauth/google';
 import { 
   Coins, Sparkles, ChevronLeft, Plus, Minus, Zap, Play, Spade, Club, Heart, Diamond, 
   CircleDot, Crown, Trophy, Users, Info, ShieldCheck, Mail, BookOpen, Tv, 
   RotateCcw, HandMetal, Layers, ArrowUpCircle, TrendingUp, Flame, Skull,
   Scale, ShieldAlert, FileText, Globe, MapPin, ExternalLink, Shield, Lock, 
-  UserCheck, HelpCircle, ChevronRight, Menu, X
+  UserCheck, HelpCircle, ChevronRight, Menu, X, LogIn, LogOut, User
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
@@ -346,6 +347,75 @@ export default function App() {
   const [showAdModal, setShowAdModal] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+
+  // Save progress to localStorage with user ID
+  const saveProgress = useCallback((userId, tokensValue) => {
+    if (userId) {
+      const progress = {
+        tokens: tokensValue,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem(`luxe_premier_progress_${userId}`, JSON.stringify(progress));
+    }
+  }, []);
+
+  // Load progress from localStorage with user ID
+  const loadProgress = useCallback((userId) => {
+    if (userId) {
+      const saved = localStorage.getItem(`luxe_premier_progress_${userId}`);
+      if (saved) {
+        try {
+          const progress = JSON.parse(saved);
+          if (progress.tokens !== undefined) {
+            setTokens(progress.tokens);
+            return true;
+          }
+        } catch (e) {
+          console.error('Error loading progress:', e);
+        }
+      }
+    }
+    return false;
+  }, []);
+
+  // Auto-save progress when tokens change and user is signed in
+  useEffect(() => {
+    if (user?.sub) {
+      saveProgress(user.sub, tokens);
+    }
+  }, [tokens, user, saveProgress]);
+
+  // Google Sign-In
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        });
+        const profile = await response.json();
+        setUser(tokenResponse);
+        setUserProfile(profile);
+        // Load saved progress for this user
+        loadProgress(profile.sub);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    },
+    onError: () => {
+      console.error('Login failed');
+    },
+  });
+
+  // Sign out
+  const handleSignOut = () => {
+    setUser(null);
+    setUserProfile(null);
+    setTokens(INITIAL_TOKENS);
+  };
 
   const startPlaying = (game) => { setActiveGame(game); setView('game'); window.scrollTo(0,0); };
   const handleWatchAd = () => { setIsAdLoading(true); setTimeout(() => { setTokens(t => t + 1000); setIsAdLoading(false); setShowAdModal(false); }, 2000); };
@@ -379,6 +449,27 @@ export default function App() {
                 </div>
                 <button onClick={() => setShowAdModal(true)} className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all shadow-xl"><Plus size={20} /></button>
             </div>
+            {userProfile ? (
+              <div className="hidden md:flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+                  {userProfile.picture ? (
+                    <img src={userProfile.picture} alt={userProfile.name} className="w-8 h-8 rounded-full" />
+                  ) : (
+                    <User size={20} className="text-zinc-400" />
+                  )}
+                  <span className="text-sm font-black text-white/80 max-w-[120px] truncate">{userProfile.name}</span>
+                </div>
+                <button onClick={handleSignOut} className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-full flex items-center gap-2 transition-all border border-zinc-700">
+                  <LogOut size={16} />
+                  <span className="text-xs font-black uppercase tracking-wider">Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <button onClick={login} className="hidden md:flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-black text-sm uppercase tracking-wider hover:bg-zinc-200 transition-all shadow-xl">
+                <LogIn size={18} />
+                Sign In
+              </button>
+            )}
             <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden text-white"><Menu size={32} /></button>
           </div>
         </div>
@@ -389,6 +480,21 @@ export default function App() {
         {mobileMenu && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-[60] bg-black p-10 flex flex-col gap-10 text-3xl font-black italic uppercase tracking-tighter">
             <button onClick={() => setMobileMenu(false)} className="self-end"><X size={40} /></button>
+            {userProfile ? (
+              <>
+                <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+                  {userProfile.picture ? (
+                    <img src={userProfile.picture} alt={userProfile.name} className="w-12 h-12 rounded-full" />
+                  ) : (
+                    <User size={32} className="text-zinc-400" />
+                  )}
+                  <span className="text-xl">{userProfile.name}</span>
+                </div>
+                <button onClick={() => { handleSignOut(); setMobileMenu(false); }}>Sign Out</button>
+              </>
+            ) : (
+              <button onClick={() => { login(); setMobileMenu(false); }}>Sign In</button>
+            )}
             <button onClick={() => navigateTo('lobby')}>Enter Casino</button>
             <button onClick={() => navigateTo('privacy')}>Privacy Policy</button>
             <button onClick={() => navigateTo('terms')}>Terms of Service</button>
