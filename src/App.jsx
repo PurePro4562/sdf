@@ -49,6 +49,16 @@ const GAMES = [
     guide: "High volatility machine. Skulls pay low, Fire pays 100x."
   },
   { 
+    id: 'mega-slots', 
+    type: 'mega-slots', 
+    name: 'MEGA WIN ULTRA', 
+    colors: 'from-cyan-950 via-blue-950 via-purple-950 to-pink-950', 
+    symbols: ['💎', '⭐', '👑', '🎰', '💰', '🚀', '🎆', '💫'], 
+    minBet: 25, 
+    icon: <Sparkles className="text-cyan-400" size={32} />,
+    guide: "ULTRA MEGA SLOTS! Triple matches pay up to 200x! Jackpot symbols trigger MEGA WIN celebrations!"
+  },
+  { 
     id: 'roulette', 
     type: 'roulette', 
     name: 'Prestige Roulette', 
@@ -244,6 +254,366 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
         <span className="relative z-10 text-black font-black text-4xl italic uppercase tracking-[0.3em]">Ignite</span>
       </button>
       <AnimatePresence>{winMsg && (<motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="absolute -top-12 bg-emerald-500 text-black px-12 py-5 rounded-full font-black text-2xl shadow-[0_0_30px_rgba(16,185,129,0.5)]">{winMsg}</motion.div>)}</AnimatePresence>
+    </div>
+  );
+};
+
+// Sound effects using Web Audio API
+const createSound = (frequency, duration, type = 'sine', volume = 0.3) => {
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  oscillator.frequency.value = frequency;
+  oscillator.type = type;
+  gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+  
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + duration);
+};
+
+const playSpinSound = () => {
+  createSound(200, 0.1, 'sawtooth', 0.2);
+  setTimeout(() => createSound(300, 0.1, 'sawtooth', 0.2), 50);
+  setTimeout(() => createSound(400, 0.1, 'sawtooth', 0.2), 100);
+};
+
+const playWinSound = (multiplier) => {
+  if (multiplier >= 100) {
+    // Mega win sound
+    [440, 554, 659, 784].forEach((freq, i) => {
+      setTimeout(() => createSound(freq, 0.3, 'sine', 0.4), i * 100);
+    });
+  } else if (multiplier >= 50) {
+    // Big win sound
+    [523, 659, 784].forEach((freq, i) => {
+      setTimeout(() => createSound(freq, 0.2, 'sine', 0.3), i * 80);
+    });
+  } else {
+    // Regular win sound
+    createSound(523, 0.15, 'sine', 0.25);
+    setTimeout(() => createSound(659, 0.15, 'sine', 0.25), 100);
+  }
+};
+
+const playReelStopSound = () => {
+  createSound(150, 0.05, 'square', 0.15);
+};
+
+// Confetti particle component
+const ConfettiParticle = ({ x, y, color, delay }) => (
+  <motion.div
+    initial={{ x, y: y - 100, opacity: 1, scale: 1 }}
+    animate={{ 
+      y: y + 500,
+      x: x + (Math.random() - 0.5) * 200,
+      opacity: [1, 1, 0],
+      scale: [1, 1.2, 0.5],
+      rotate: [0, 360]
+    }}
+    transition={{ 
+      duration: 2,
+      delay,
+      ease: "easeOut"
+    }}
+    className="absolute w-3 h-3 rounded-full"
+    style={{ 
+      background: color,
+      boxShadow: `0 0 10px ${color}`
+    }}
+  />
+);
+
+// Ultra-entertaining slot machine with crazy effects
+const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [winMsg, setWinMsg] = useState('');
+  const [bet, setBet] = useState(initialMinBet);
+  const [multiplier, setMultiplier] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [screenShake, setScreenShake] = useState(false);
+  const [glowEffect, setGlowEffect] = useState(false);
+  const containerRef = useRef(null);
+  const [particles, setParticles] = useState([]);
+
+  const generateConfetti = () => {
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#ff0088'];
+    const newParticles = [];
+    for (let i = 0; i < 100; i++) {
+      newParticles.push({
+        id: i,
+        x: Math.random() * (containerRef.current?.offsetWidth || 800),
+        y: Math.random() * (containerRef.current?.offsetHeight || 600),
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 0.5
+      });
+    }
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), 3000);
+  };
+
+  const spin = () => {
+    if (isSpinning || tokens < bet) return;
+    setIsSpinning(true); 
+    setWinMsg(''); 
+    setMultiplier(0);
+    setShowConfetti(false);
+    setGlowEffect(false);
+    setTokens(t => t - bet);
+    playSpinSound();
+    
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)], 
+      symbols[Math.floor(Math.random() * symbols.length)], 
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+    
+    [800, 1600, 2800].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { 
+          const n = [...prev]; 
+          n[i] = results[i]; 
+          return n; 
+        });
+        playReelStopSound();
+        if (i === 2) {
+          setTimeout(() => finalize(results), 300);
+        }
+      }, d);
+    });
+  };
+
+  const finalize = (res) => {
+    setIsSpinning(false);
+    let mult = 0;
+    let message = '';
+    let isMegaWin = false;
+
+    if (res[0] === res[1] && res[1] === res[2]) {
+      // Triple match
+      if (res[0] === '💎' || res[0] === '👑' || res[0] === '⭐') {
+        mult = 200;
+        message = `💎💎💎 MEGA ULTRA JACKPOT!!! 💎💎💎 +${(bet * mult).toLocaleString()}`;
+        isMegaWin = true;
+      } else if (res[0] === '🎰' || res[0] === '💰') {
+        mult = 100;
+        message = `🎰🎰🎰 ULTRA JACKPOT!!! 🎰🎰🎰 +${(bet * mult).toLocaleString()}`;
+        isMegaWin = true;
+      } else if (res[0] === '🚀' || res[0] === '🎆') {
+        mult = 75;
+        message = `🚀🚀🚀 MEGA WIN!!! 🚀🚀🚀 +${(bet * mult).toLocaleString()}`;
+        isMegaWin = true;
+      } else {
+        mult = 50;
+        message = `🎉 TRIPLE MATCH! 🎉 +${(bet * mult).toLocaleString()}`;
+      }
+      setTokens(t => t + bet * mult);
+    } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
+      // Double match
+      mult = 3;
+      message = `✨ DOUBLE WIN! ✨ +${(bet * mult).toLocaleString()}`;
+      setTokens(t => t + bet * mult);
+    }
+
+    if (mult > 0) {
+      setMultiplier(mult);
+      setWinMsg(message);
+      playWinSound(mult);
+      
+      if (isMegaWin) {
+        setShowConfetti(true);
+        setScreenShake(true);
+        setGlowEffect(true);
+        generateConfetti();
+        setTimeout(() => {
+          setScreenShake(false);
+          setGlowEffect(false);
+        }, 2000);
+        setTimeout(() => setShowConfetti(false), 3000);
+      }
+    }
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      className={`flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-cyan-900/30 via-blue-900/30 via-purple-900/30 to-pink-900/30 rounded-[4rem] border-2 border-white/10 relative shadow-[0_0_200px_rgba(0,0,0,0.8)] overflow-hidden ${
+        screenShake ? 'animate-pulse' : ''
+      }`}
+      style={{
+        boxShadow: glowEffect ? '0 0 200px rgba(255,215,0,0.8), 0 0 400px rgba(255,20,147,0.6)' : undefined,
+        transition: 'box-shadow 0.3s ease'
+      }}
+    >
+      {/* Animated background effects */}
+      {glowEffect && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ 
+            opacity: [0, 1, 0],
+            scale: [1, 1.2, 1]
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-pink-500/20 to-cyan-500/20 pointer-events-none"
+        />
+      )}
+
+      {/* Confetti particles */}
+      <AnimatePresence>
+        {particles.map(particle => (
+          <ConfettiParticle key={particle.id} {...particle} />
+        ))}
+      </AnimatePresence>
+
+      {/* Reels with enhanced effects */}
+      <div className="relative flex gap-4 md:gap-8 bg-black/60 p-6 rounded-[2.5rem] border-2 border-white/20 backdrop-blur-xl">
+        {reels.map((symbol, i) => (
+          <motion.div
+            key={`${symbol}-${i}-${isSpinning}`}
+            className="relative w-32 h-52 md:w-40 md:h-64 bg-gradient-to-b from-zinc-800 via-zinc-900 to-black rounded-[2rem] overflow-hidden border-2 border-white/20 flex items-center justify-center"
+            animate={isSpinning ? {
+              scale: [1, 1.1, 1],
+              rotate: [0, 5, -5, 0],
+              boxShadow: [
+                '0 0 20px rgba(255,255,255,0.3)',
+                '0 0 40px rgba(0,255,255,0.6)',
+                '0 0 20px rgba(255,255,255,0.3)'
+              ]
+            } : {
+              scale: 1,
+              rotate: 0
+            }}
+            transition={{ duration: 0.1, repeat: isSpinning ? Infinity : 0 }}
+          >
+            <motion.div
+              key={isSpinning ? `spin-${i}-${Date.now()}` : `stop-${i}`}
+              initial={isSpinning ? { y: -600, rotate: 0 } : { y: 0, scale: 1 }}
+              animate={isSpinning ? {
+                y: [0, 600],
+                rotate: [0, 360]
+              } : {
+                y: 0,
+                scale: [1, 1.3, 1],
+                rotate: [0, 10, -10, 0]
+              }}
+              transition={isSpinning ? {
+                duration: 0.08,
+                repeat: Infinity,
+                ease: "linear"
+              } : {
+                duration: 0.5,
+                ease: "backOut"
+              }}
+              className={`text-7xl md:text-9xl ${
+                isSpinning 
+                  ? 'blur-md opacity-30' 
+                  : 'drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter brightness-110'
+              }`}
+              style={{
+                textShadow: isSpinning ? 'none' : '0 0 20px currentColor, 0 0 40px currentColor'
+              }}
+            >
+              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+            </motion.div>
+            
+            {/* Glowing overlay */}
+            {!isSpinning && (reels[0] === reels[1] && reels[1] === reels[2]) && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="absolute inset-0 bg-gradient-to-br from-yellow-400/30 via-pink-400/30 to-cyan-400/30 pointer-events-none"
+              />
+            )}
+            
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50 pointer-events-none" />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Multiplier display */}
+      {multiplier > 0 && (
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: [0, 1.5, 1], rotate: 0 }}
+          exit={{ scale: 0, rotate: 180 }}
+          className="absolute top-20 text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-400 to-cyan-400"
+          style={{
+            textShadow: '0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,20,147,0.6)',
+            WebkitTextStroke: '2px rgba(255,255,255,0.5)'
+          }}
+        >
+          {multiplier}x
+        </motion.div>
+      )}
+
+      <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={isSpinning} />
+      
+      <button 
+        onClick={spin} 
+        disabled={isSpinning} 
+        className="group relative w-full h-32 rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all"
+      >
+        <motion.div
+          animate={isSpinning ? {
+            background: [
+              'linear-gradient(90deg, #ff0000, #00ff00, #0000ff)',
+              'linear-gradient(90deg, #00ff00, #0000ff, #ff0000)',
+              'linear-gradient(90deg, #0000ff, #ff0000, #00ff00)'
+            ]
+          } : {}}
+          transition={{ duration: 0.3, repeat: isSpinning ? Infinity : 0 }}
+          className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 group-hover:from-cyan-300 group-hover:via-purple-300 group-hover:to-pink-300"
+        />
+        <span className="relative z-10 text-black font-black text-5xl italic uppercase tracking-[0.3em] flex items-center justify-center gap-4">
+          {isSpinning ? (
+            <>
+              <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}>
+                ⚡
+              </motion.span>
+              SPINNING...
+              <motion.span animate={{ rotate: -360 }} transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}>
+                ⚡
+              </motion.span>
+            </>
+          ) : (
+            '🎰 MEGA SPIN 🎰'
+          )}
+        </span>
+      </button>
+
+      {/* Win message with crazy effects */}
+      <AnimatePresence>
+        {winMsg && (
+          <motion.div
+            initial={{ scale: 0, rotate: -180, opacity: 0 }}
+            animate={{ 
+              scale: [0, 1.2, 1],
+              rotate: [0, 10, -10, 0],
+              opacity: 1,
+              y: [100, 0]
+            }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute -top-8 bg-gradient-to-r from-yellow-400 via-pink-400 to-cyan-400 text-black px-16 py-6 rounded-full font-black text-3xl md:text-4xl shadow-[0_0_50px_rgba(255,215,0,0.8)] border-4 border-white/50"
+            style={{
+              textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+              animation: 'pulse 1s infinite'
+            }}
+          >
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 0.5, repeat: Infinity }}
+            >
+              {winMsg}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -474,7 +844,8 @@ export default function App() {
           
           <div className="hidden md:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
             <button onClick={() => navigateTo('lobby')} className={`hover:text-white transition-colors ${view === 'lobby' ? 'text-white' : ''}`}>Floor Games</button>
-            <button onClick={() => navigateTo('privacy')} className={`hover:text-white transition-colors ${view === 'privacy' ? 'text-white' : ''}`}>Privacy</button>
+            <a href="/privacy.html" target="_blank" className="hover:text-white transition-colors">Privacy</a>
+            <a href="/terms.html" target="_blank" className="hover:text-white transition-colors">Terms</a>
             <button onClick={() => navigateTo('responsible')} className={`hover:text-white transition-colors ${view === 'responsible' ? 'text-white' : ''}`}>Safe Play</button>
           </div>
 
@@ -533,8 +904,8 @@ export default function App() {
               <button onClick={() => { login(); setMobileMenu(false); }}>Sign In</button>
             )}
             <button onClick={() => navigateTo('lobby')}>Enter Casino</button>
-            <button onClick={() => navigateTo('privacy')}>Privacy Policy</button>
-            <button onClick={() => navigateTo('terms')}>Terms of Service</button>
+            <a href="/privacy.html" target="_blank" className="block">Privacy Policy</a>
+            <a href="/terms.html" target="_blank" className="block">Terms of Service</a>
             <button onClick={() => navigateTo('responsible')}>Responsible Gaming</button>
           </motion.div>
         )}
@@ -582,6 +953,7 @@ export default function App() {
               </div>
               {activeGame.type === 'blackjack' && <BlackjackTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
               {activeGame.type === 'slots' && <SlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
+              {activeGame.type === 'mega-slots' && <MegaSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
               {activeGame.type === 'roulette' && <RouletteTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
               <div className="w-full max-w-3xl bg-zinc-900/50 border border-white/5 p-12 rounded-[3rem] flex flex-col md:flex-row gap-10">
                 <div className="w-20 h-20 bg-white/5 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-white/5"><Info className="text-zinc-400" size={32} /></div>
@@ -593,132 +965,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {view === 'privacy' && (
-            <LegalPage 
-                title="Privacy Policy" 
-                onBack={() => navigateTo('landing')}
-                content={[
-                    "Luxe Premier Gaming Studio is committed to maintaining the highest standards of privacy and data protection for our distinguished guests. This comprehensive policy outlines how we collect, use, store, and protect your information within our social gaming simulation platform.",
-                    { type: 'heading', text: '1. Information We Collect' },
-                    { type: 'subheading', text: 'Account Information' },
-                    "When you choose to sign in with Google, we collect basic profile information including your name, email address, and profile picture. This information is used solely to personalize your experience and maintain your game progress across sessions.",
-                    { type: 'subheading', text: 'Game Data' },
-                    "We store your virtual token balance, game preferences, and session history locally in your browser. This data is associated with your account to ensure continuity of your gaming experience.",
-                    { type: 'subheading', text: 'Technical Information' },
-                    "Our platform may collect technical information such as browser type, device information, IP address, and usage patterns. This data is used exclusively for platform optimization and security purposes.",
-                    { type: 'heading', text: '2. How We Use Your Information' },
-                    { type: 'list', items: [
-                      "To provide and maintain our gaming simulation services",
-                      "To save and restore your game progress when you sign in",
-                      "To improve platform functionality and user experience",
-                      "To ensure platform security and prevent fraudulent activity",
-                      "To communicate important updates or changes to our services"
-                    ]},
-                    { type: 'heading', text: '3. Data Storage and Security' },
-                    "Your game progress and profile data are stored locally in your browser using secure localStorage mechanisms. When you sign in with Google, your progress is associated with your account identifier to enable cross-device synchronization.",
-                    "We implement industry-standard security measures to protect your information. However, no method of transmission over the internet or electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your data, we cannot guarantee absolute security.",
-                    { type: 'heading', text: '4. Third-Party Services' },
-                    "Luxe Premier utilizes Google OAuth for authentication services. When you sign in with Google, you are subject to Google's Privacy Policy. We do not share your information with any other third-party services for marketing or advertising purposes.",
-                    { type: 'heading', text: '5. Cookies and Local Storage' },
-                    "We use browser localStorage to maintain your session state and game progress. This data remains on your device and is not transmitted to external servers except when necessary for account synchronization.",
-                    "We do not use tracking cookies or persistent identifiers for advertising purposes. All data storage is designed to enhance your gaming experience only.",
-                    { type: 'heading', text: '6. Your Rights and Choices' },
-                    { type: 'list', items: [
-                      "You may access, update, or delete your account information at any time",
-                      "You can sign out at any time, which will clear your session data",
-                      "You have the right to request information about data we hold about you",
-                      "You may opt out of data collection by not signing in, though this limits progress saving functionality"
-                    ]},
-                    { type: 'heading', text: '7. Children\'s Privacy' },
-                    "Luxe Premier is strictly intended for users 18 years of age or older. We do not knowingly collect personal information from individuals under 18. If we become aware that we have collected information from a minor, we will take steps to delete such information immediately.",
-                    { type: 'heading', text: '8. Data Retention' },
-                    "We retain your account information and game progress for as long as your account is active. If you choose to delete your account or stop using our services, we will delete or anonymize your data within 30 days, except where we are required to retain it for legal purposes.",
-                    { type: 'heading', text: '9. Changes to This Policy' },
-                    "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the 'Last Updated' date. Your continued use of Luxe Premier after such modifications constitutes acceptance of the updated policy.",
-                    { type: 'heading', text: '10. Contact Us' },
-                    "If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us through the appropriate channels. We are committed to addressing your privacy concerns promptly and transparently.",
-                    "By using Luxe Premier, you acknowledge that you have read, understood, and agree to be bound by this Privacy Policy."
-                ]}
-            />
-          )}
-
-          {view === 'terms' && (
-            <LegalPage 
-                title="Terms of Service" 
-                onBack={() => navigateTo('landing')}
-                content={[
-                    "Welcome to Luxe Premier Gaming Studio. These Terms of Service ('Terms') govern your access to and use of our social gaming simulation platform. By accessing or using Luxe Premier, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use our services.",
-                    { type: 'heading', text: '1. Acceptance of Terms' },
-                    "By accessing, browsing, or using the Luxe Premier platform, you acknowledge that you have read, understood, and agree to be bound by these Terms and all applicable laws and regulations. If you do not agree with any part of these Terms, you must not use our services.",
-                    { type: 'heading', text: '2. Eligibility and Age Requirements' },
-                    { type: 'list', items: [
-                      "You must be at least 18 years of age to use Luxe Premier",
-                      "You must have the legal capacity to enter into binding agreements",
-                      "You must comply with all applicable local, state, and federal laws",
-                      "You represent that all information provided during registration is accurate and truthful"
-                    ]},
-                    { type: 'heading', text: '3. Description of Service' },
-                    "Luxe Premier is a social gaming simulation platform that provides virtual entertainment experiences. Our platform features probability-based simulations including blackjack, slots, and roulette games. All gameplay involves virtual tokens with no real-world monetary value.",
-                    { type: 'heading', text: '4. Virtual Tokens and Credits' },
-                    { type: 'subheading', text: 'Nature of Virtual Currency' },
-                    "Luxe Premier utilizes virtual tokens (referred to as 'Luxe Credits' or 'tokens') that have absolutely no real-world monetary value. These tokens are purely for entertainment purposes within our simulation platform.",
-                    { type: 'subheading', text: 'Token Restrictions' },
-                    { type: 'numbered', items: [
-                      "Virtual tokens cannot be purchased with real money",
-                      "Virtual tokens cannot be exchanged for real currency, prizes, or any form of value",
-                      "Virtual tokens cannot be transferred, sold, or traded to other users",
-                      "Virtual tokens are non-refundable and have no cash value",
-                      "Virtual tokens may be reset or modified at our discretion"
-                    ]},
-                    { type: 'heading', text: '5. No Real Money Gambling' },
-                    "Luxe Premier is NOT a gambling facility. We do not accept real money wagers, bets, or stakes of any kind. Our platform is a social simulation designed for entertainment purposes only. No real currency transactions occur on this platform.",
-                    { type: 'heading', text: '6. User Accounts and Authentication' },
-                    { type: 'list', items: [
-                      "You may choose to sign in with Google to save your game progress",
-                      "You are responsible for maintaining the confidentiality of your account",
-                      "You are responsible for all activities that occur under your account",
-                      "You must immediately notify us of any unauthorized use of your account",
-                      "We reserve the right to suspend or terminate accounts that violate these Terms"
-                    ]},
-                    { type: 'heading', text: '7. Acceptable Use Policy' },
-                    "You agree not to:",
-                    { type: 'numbered', items: [
-                      "Attempt to manipulate, hack, or exploit the random number generation system",
-                      "Use automated scripts, bots, or any unauthorized third-party software",
-                      "Reverse engineer, decompile, or disassemble any part of the platform",
-                      "Interfere with or disrupt the platform's servers or networks",
-                      "Impersonate any person or entity or misrepresent your affiliation",
-                      "Violate any applicable laws or regulations",
-                      "Engage in any activity that could harm or damage the platform or other users"
-                    ]},
-                    { type: 'heading', text: '8. Intellectual Property Rights' },
-                    "All content, features, and functionality of Luxe Premier, including but not limited to text, graphics, logos, icons, images, audio clips, and software, are the exclusive property of Luxe Premier Gaming Studio and are protected by international copyright, trademark, and other intellectual property laws.",
-                    "You may not reproduce, distribute, modify, create derivative works of, publicly display, or otherwise exploit any content from Luxe Premier without our express written permission.",
-                    { type: 'heading', text: '9. Disclaimers and Limitations of Liability' },
-                    { type: 'subheading', text: 'Service Availability' },
-                    "We strive to provide continuous access to our platform, but we do not guarantee that the service will be available at all times. We may experience downtime, maintenance, or technical issues that temporarily interrupt service.",
-                    { type: 'subheading', text: 'No Warranties' },
-                    "LUXE PREMIER IS PROVIDED 'AS IS' AND 'AS AVAILABLE' WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.",
-                    { type: 'subheading', text: 'Limitation of Liability' },
-                    "TO THE MAXIMUM EXTENT PERMITTED BY LAW, LUXE PREMIER GAMING STUDIO SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.",
-                    { type: 'heading', text: '10. Termination' },
-                    "We reserve the right to suspend or terminate your access to Luxe Premier at any time, with or without cause or notice, for any reason including, but not limited to, breach of these Terms. Upon termination, your right to use the platform will immediately cease.",
-                    { type: 'heading', text: '11. Indemnification' },
-                    "You agree to indemnify, defend, and hold harmless Luxe Premier Gaming Studio, its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses, including reasonable attorneys' fees, arising out of or in any way connected with your use of the platform or violation of these Terms.",
-                    { type: 'heading', text: '12. Governing Law and Dispute Resolution' },
-                    "These Terms shall be governed by and construed in accordance with applicable laws. Any disputes arising from or relating to these Terms or your use of Luxe Premier shall be resolved through appropriate legal channels.",
-                    { type: 'heading', text: '13. Changes to Terms' },
-                    "We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on this page and updating the 'Last Updated' date. Your continued use of Luxe Premier after such modifications constitutes acceptance of the updated Terms.",
-                    { type: 'heading', text: '14. Severability' },
-                    "If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force and effect.",
-                    { type: 'heading', text: '15. Entire Agreement' },
-                    "These Terms, together with our Privacy Policy, constitute the entire agreement between you and Luxe Premier Gaming Studio regarding your use of the platform and supersede all prior agreements and understandings.",
-                    { type: 'heading', text: '16. Contact Information' },
-                    "If you have any questions about these Terms of Service, please contact us through the appropriate channels. We are committed to providing clarity and transparency regarding our platform policies.",
-                    "By using Luxe Premier, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service."
-                ]}
-            />
-          )}
 
           {view === 'responsible' && (
             <LegalPage 
@@ -749,8 +995,8 @@ export default function App() {
           <div className="space-y-6">
             <h5 className="font-black uppercase text-xs tracking-widest flex items-center gap-2"><FileText size={14}/> Policies</h5>
             <ul className="space-y-3 text-sm text-zinc-500 font-medium italic">
-              <li onClick={() => navigateTo('terms')} className="hover:text-white cursor-pointer transition-colors">Terms of Service</li>
-              <li onClick={() => navigateTo('privacy')} className="hover:text-white cursor-pointer transition-colors">Privacy Charter</li>
+              <li><a href="/terms.html" target="_blank" className="hover:text-white transition-colors">Terms of Service</a></li>
+              <li><a href="/privacy.html" target="_blank" className="hover:text-white transition-colors">Privacy Charter</a></li>
               <li className="hover:text-white cursor-pointer transition-colors">Fair Play Audit</li>
             </ul>
           </div>
