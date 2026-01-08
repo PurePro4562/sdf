@@ -330,10 +330,47 @@ const LandingPage = ({ onEnter }) => (
 
 const LegalPage = ({ title, content, onBack }) => (
   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-4xl mx-auto py-20 px-6">
-    <button onClick={onBack} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-10 font-black uppercase tracking-widest text-xs"><ChevronLeft /> Return</button>
-    <h1 className="text-5xl font-black italic tracking-tighter mb-12 text-white">{title}</h1>
-    <div className="prose prose-invert prose-zinc max-w-none space-y-8 text-zinc-400 leading-relaxed text-lg">
-      {content.map((p, i) => <p key={i}>{p}</p>)}
+    <button onClick={onBack} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-10 font-black uppercase tracking-widest text-xs transition-colors"><ChevronLeft /> Return</button>
+    <div className="bg-gradient-to-br from-zinc-900/50 to-black/50 border border-white/5 rounded-[3rem] p-12 md:p-16 shadow-2xl">
+      <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter mb-4 text-white">{title}</h1>
+      <div className="h-px w-24 bg-gradient-to-r from-white/20 to-transparent mb-12"></div>
+      <div className="space-y-10 text-zinc-400 leading-relaxed">
+        {content.map((item, i) => {
+          if (typeof item === 'string') {
+            return <p key={i} className="text-lg italic">{item}</p>;
+          } else if (item.type === 'heading') {
+            return <h2 key={i} className="text-2xl font-black text-white mt-12 mb-6 uppercase tracking-wider">{item.text}</h2>;
+          } else if (item.type === 'subheading') {
+            return <h3 key={i} className="text-xl font-black text-zinc-300 mt-8 mb-4 uppercase tracking-widest text-xs">{item.text}</h3>;
+          } else if (item.type === 'list') {
+            return (
+              <ul key={i} className="space-y-4 ml-6">
+                {item.items.map((li, j) => (
+                  <li key={j} className="flex items-start gap-3">
+                    <span className="text-white mt-2">•</span>
+                    <span className="text-lg italic flex-1">{li}</span>
+                  </li>
+                ))}
+              </ul>
+            );
+          } else if (item.type === 'numbered') {
+            return (
+              <ol key={i} className="space-y-4 ml-6">
+                {item.items.map((li, j) => (
+                  <li key={j} className="flex items-start gap-3">
+                    <span className="text-white mt-2 font-black">{j + 1}.</span>
+                    <span className="text-lg italic flex-1">{li}</span>
+                  </li>
+                ))}
+              </ol>
+            );
+          }
+          return null;
+        })}
+      </div>
+      <div className="mt-16 pt-8 border-t border-white/5 text-center">
+        <p className="text-zinc-600 text-sm font-black uppercase tracking-[0.3em]">Last Updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      </div>
     </div>
   </motion.div>
 );
@@ -561,11 +598,46 @@ export default function App() {
                 title="Privacy Policy" 
                 onBack={() => navigateTo('landing')}
                 content={[
-                    "Luxe Premier is committed to protecting the privacy of our virtual guests. This policy outlines our approach to data management and security.",
-                    "We do not collect personal identification information for real-world marketing. All session data is stored locally within your simulation and is not transmitted to external marketing partners.",
-                    "Our simulation utilizes random number generation (RNG) that operates independently of any user profiling. We prioritize a transparent and anonymous user experience for every club member.",
-                    "Cookies are utilized solely to maintain session state and token balance for the duration of your stay. No persistent tracking mechanisms are implemented on this platform.",
-                    "By accessing Luxe Premier, you consent to our internal data management practices designed to protect the integrity of the social gaming environment."
+                    "Luxe Premier Gaming Studio is committed to maintaining the highest standards of privacy and data protection for our distinguished guests. This comprehensive policy outlines how we collect, use, store, and protect your information within our social gaming simulation platform.",
+                    { type: 'heading', text: '1. Information We Collect' },
+                    { type: 'subheading', text: 'Account Information' },
+                    "When you choose to sign in with Google, we collect basic profile information including your name, email address, and profile picture. This information is used solely to personalize your experience and maintain your game progress across sessions.",
+                    { type: 'subheading', text: 'Game Data' },
+                    "We store your virtual token balance, game preferences, and session history locally in your browser. This data is associated with your account to ensure continuity of your gaming experience.",
+                    { type: 'subheading', text: 'Technical Information' },
+                    "Our platform may collect technical information such as browser type, device information, IP address, and usage patterns. This data is used exclusively for platform optimization and security purposes.",
+                    { type: 'heading', text: '2. How We Use Your Information' },
+                    { type: 'list', items: [
+                      "To provide and maintain our gaming simulation services",
+                      "To save and restore your game progress when you sign in",
+                      "To improve platform functionality and user experience",
+                      "To ensure platform security and prevent fraudulent activity",
+                      "To communicate important updates or changes to our services"
+                    ]},
+                    { type: 'heading', text: '3. Data Storage and Security' },
+                    "Your game progress and profile data are stored locally in your browser using secure localStorage mechanisms. When you sign in with Google, your progress is associated with your account identifier to enable cross-device synchronization.",
+                    "We implement industry-standard security measures to protect your information. However, no method of transmission over the internet or electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your data, we cannot guarantee absolute security.",
+                    { type: 'heading', text: '4. Third-Party Services' },
+                    "Luxe Premier utilizes Google OAuth for authentication services. When you sign in with Google, you are subject to Google's Privacy Policy. We do not share your information with any other third-party services for marketing or advertising purposes.",
+                    { type: 'heading', text: '5. Cookies and Local Storage' },
+                    "We use browser localStorage to maintain your session state and game progress. This data remains on your device and is not transmitted to external servers except when necessary for account synchronization.",
+                    "We do not use tracking cookies or persistent identifiers for advertising purposes. All data storage is designed to enhance your gaming experience only.",
+                    { type: 'heading', text: '6. Your Rights and Choices' },
+                    { type: 'list', items: [
+                      "You may access, update, or delete your account information at any time",
+                      "You can sign out at any time, which will clear your session data",
+                      "You have the right to request information about data we hold about you",
+                      "You may opt out of data collection by not signing in, though this limits progress saving functionality"
+                    ]},
+                    { type: 'heading', text: '7. Children\'s Privacy' },
+                    "Luxe Premier is strictly intended for users 18 years of age or older. We do not knowingly collect personal information from individuals under 18. If we become aware that we have collected information from a minor, we will take steps to delete such information immediately.",
+                    { type: 'heading', text: '8. Data Retention' },
+                    "We retain your account information and game progress for as long as your account is active. If you choose to delete your account or stop using our services, we will delete or anonymize your data within 30 days, except where we are required to retain it for legal purposes.",
+                    { type: 'heading', text: '9. Changes to This Policy' },
+                    "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the 'Last Updated' date. Your continued use of Luxe Premier after such modifications constitutes acceptance of the updated policy.",
+                    { type: 'heading', text: '10. Contact Us' },
+                    "If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us through the appropriate channels. We are committed to addressing your privacy concerns promptly and transparently.",
+                    "By using Luxe Premier, you acknowledge that you have read, understood, and agree to be bound by this Privacy Policy."
                 ]}
             />
           )}
@@ -575,12 +647,75 @@ export default function App() {
                 title="Terms of Service" 
                 onBack={() => navigateTo('landing')}
                 content={[
-                    "Usage of the Luxe Premier platform is subject to the following professional standards and terms.",
-                    "1. Eligibility: Access is restricted to individuals 18 years of age or older. This is a social simulation only.",
-                    "2. Virtual Tokens: Tokens provided (Luxe Credits) have zero monetary value. They cannot be withdrawn, traded, or redeemed for any form of real-world value or prizes.",
-                    "3. No Real Wagers: No real currency wagers are accepted on this platform. This is a mathematically based entertainment simulation.",
-                    "4. Fair Conduct: Guests are expected to maintain the integrity of the simulation. Any attempt to manipulate the RNG outcomes will result in termination of access.",
-                    "5. Disclaimer: Luxe Premier is not a gambling facility. We provide high-performance entertainment simulations for recreational use only."
+                    "Welcome to Luxe Premier Gaming Studio. These Terms of Service ('Terms') govern your access to and use of our social gaming simulation platform. By accessing or using Luxe Premier, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use our services.",
+                    { type: 'heading', text: '1. Acceptance of Terms' },
+                    "By accessing, browsing, or using the Luxe Premier platform, you acknowledge that you have read, understood, and agree to be bound by these Terms and all applicable laws and regulations. If you do not agree with any part of these Terms, you must not use our services.",
+                    { type: 'heading', text: '2. Eligibility and Age Requirements' },
+                    { type: 'list', items: [
+                      "You must be at least 18 years of age to use Luxe Premier",
+                      "You must have the legal capacity to enter into binding agreements",
+                      "You must comply with all applicable local, state, and federal laws",
+                      "You represent that all information provided during registration is accurate and truthful"
+                    ]},
+                    { type: 'heading', text: '3. Description of Service' },
+                    "Luxe Premier is a social gaming simulation platform that provides virtual entertainment experiences. Our platform features probability-based simulations including blackjack, slots, and roulette games. All gameplay involves virtual tokens with no real-world monetary value.",
+                    { type: 'heading', text: '4. Virtual Tokens and Credits' },
+                    { type: 'subheading', text: 'Nature of Virtual Currency' },
+                    "Luxe Premier utilizes virtual tokens (referred to as 'Luxe Credits' or 'tokens') that have absolutely no real-world monetary value. These tokens are purely for entertainment purposes within our simulation platform.",
+                    { type: 'subheading', text: 'Token Restrictions' },
+                    { type: 'numbered', items: [
+                      "Virtual tokens cannot be purchased with real money",
+                      "Virtual tokens cannot be exchanged for real currency, prizes, or any form of value",
+                      "Virtual tokens cannot be transferred, sold, or traded to other users",
+                      "Virtual tokens are non-refundable and have no cash value",
+                      "Virtual tokens may be reset or modified at our discretion"
+                    ]},
+                    { type: 'heading', text: '5. No Real Money Gambling' },
+                    "Luxe Premier is NOT a gambling facility. We do not accept real money wagers, bets, or stakes of any kind. Our platform is a social simulation designed for entertainment purposes only. No real currency transactions occur on this platform.",
+                    { type: 'heading', text: '6. User Accounts and Authentication' },
+                    { type: 'list', items: [
+                      "You may choose to sign in with Google to save your game progress",
+                      "You are responsible for maintaining the confidentiality of your account",
+                      "You are responsible for all activities that occur under your account",
+                      "You must immediately notify us of any unauthorized use of your account",
+                      "We reserve the right to suspend or terminate accounts that violate these Terms"
+                    ]},
+                    { type: 'heading', text: '7. Acceptable Use Policy' },
+                    "You agree not to:",
+                    { type: 'numbered', items: [
+                      "Attempt to manipulate, hack, or exploit the random number generation system",
+                      "Use automated scripts, bots, or any unauthorized third-party software",
+                      "Reverse engineer, decompile, or disassemble any part of the platform",
+                      "Interfere with or disrupt the platform's servers or networks",
+                      "Impersonate any person or entity or misrepresent your affiliation",
+                      "Violate any applicable laws or regulations",
+                      "Engage in any activity that could harm or damage the platform or other users"
+                    ]},
+                    { type: 'heading', text: '8. Intellectual Property Rights' },
+                    "All content, features, and functionality of Luxe Premier, including but not limited to text, graphics, logos, icons, images, audio clips, and software, are the exclusive property of Luxe Premier Gaming Studio and are protected by international copyright, trademark, and other intellectual property laws.",
+                    "You may not reproduce, distribute, modify, create derivative works of, publicly display, or otherwise exploit any content from Luxe Premier without our express written permission.",
+                    { type: 'heading', text: '9. Disclaimers and Limitations of Liability' },
+                    { type: 'subheading', text: 'Service Availability' },
+                    "We strive to provide continuous access to our platform, but we do not guarantee that the service will be available at all times. We may experience downtime, maintenance, or technical issues that temporarily interrupt service.",
+                    { type: 'subheading', text: 'No Warranties' },
+                    "LUXE PREMIER IS PROVIDED 'AS IS' AND 'AS AVAILABLE' WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.",
+                    { type: 'subheading', text: 'Limitation of Liability' },
+                    "TO THE MAXIMUM EXTENT PERMITTED BY LAW, LUXE PREMIER GAMING STUDIO SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.",
+                    { type: 'heading', text: '10. Termination' },
+                    "We reserve the right to suspend or terminate your access to Luxe Premier at any time, with or without cause or notice, for any reason including, but not limited to, breach of these Terms. Upon termination, your right to use the platform will immediately cease.",
+                    { type: 'heading', text: '11. Indemnification' },
+                    "You agree to indemnify, defend, and hold harmless Luxe Premier Gaming Studio, its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses, including reasonable attorneys' fees, arising out of or in any way connected with your use of the platform or violation of these Terms.",
+                    { type: 'heading', text: '12. Governing Law and Dispute Resolution' },
+                    "These Terms shall be governed by and construed in accordance with applicable laws. Any disputes arising from or relating to these Terms or your use of Luxe Premier shall be resolved through appropriate legal channels.",
+                    { type: 'heading', text: '13. Changes to Terms' },
+                    "We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on this page and updating the 'Last Updated' date. Your continued use of Luxe Premier after such modifications constitutes acceptance of the updated Terms.",
+                    { type: 'heading', text: '14. Severability' },
+                    "If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force and effect.",
+                    { type: 'heading', text: '15. Entire Agreement' },
+                    "These Terms, together with our Privacy Policy, constitute the entire agreement between you and Luxe Premier Gaming Studio regarding your use of the platform and supersede all prior agreements and understandings.",
+                    { type: 'heading', text: '16. Contact Information' },
+                    "If you have any questions about these Terms of Service, please contact us through the appropriate channels. We are committed to providing clarity and transparency regarding our platform policies.",
+                    "By using Luxe Premier, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service."
                 ]}
             />
           )}
