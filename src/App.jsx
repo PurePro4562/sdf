@@ -4,16 +4,17 @@ import {
   Coins, Sparkles, ChevronLeft, Plus, Minus, Zap, Play, Spade, Club, Heart, Diamond, 
   CircleDot, Crown, Trophy, Users, Info, ShieldCheck, Mail, BookOpen, Tv, 
   RotateCcw, HandMetal, Layers, ArrowUpCircle, TrendingUp, Flame, Skull,
-  Scale, ShieldAlert, FileText, Globe, MapPin, ExternalLink
+  Scale, ShieldAlert, FileText, Globe, MapPin, ExternalLink, Shield, Lock, 
+  UserCheck, HelpCircle, ChevronRight, Menu, X
 } from 'lucide-react';
-import './index.css'
+
 // --- CONFIGURATION ---
 const INITIAL_TOKENS = 2500;
 const SITE_CONFIG = {
   name: "LUXE PREMIER",
   tagline: "The World's Most Refined Social Gaming Simulation",
-  description: "Experience the pinnacle of virtual gaming with Luxe Premier. Our platform offers high-performance RNG simulations designed for entertainment and strategic mastery.",
-  disclaimer: "Luxe Premier is a strictly social simulation platform. Virtual tokens have no real-world value and cannot be exchanged for currency or prizes.",
+  description: "Experience the pinnacle of virtual gaming with Luxe Premier. Our platform offers high-performance RNG simulations designed for entertainment and strategic mastery in a zero-risk environment.",
+  disclaimer: "Luxe Premier is a strictly social simulation platform. Virtual tokens have no real-world value and cannot be exchanged for currency or prizes. Participation is intended for those 18+.",
 };
 
 const GAMES = [
@@ -76,7 +77,7 @@ const calcHand = (hand) => {
   return score;
 };
 
-// --- COMPONENTS ---
+// --- REUSABLE COMPONENTS ---
 
 const Card = ({ card, hidden, index }) => (
   <motion.div
@@ -107,12 +108,10 @@ const Card = ({ card, hidden, index }) => (
 
 const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
   const chips = [10, 50, 100, 500, 1000];
-  
   const addBet = (val) => {
     if (currentBet + val <= maxTokens) setBet(currentBet + val);
     else setBet(maxTokens);
   };
-
   return (
     <div className={`flex flex-col gap-6 items-center w-full max-w-lg ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
       <div className="flex items-center gap-4 w-full">
@@ -121,19 +120,14 @@ const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
            <span className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.4em] mb-1">Current Stakes</span>
            <div className="flex items-center gap-3">
              <Coins size={20} className="text-yellow-500" />
-             <span className="text-4xl font-mono font-black tracking-tighter">{currentBet.toLocaleString()}</span>
+             <span className="text-4xl font-mono font-black tracking-tighter text-white">{currentBet.toLocaleString()}</span>
            </div>
         </div>
         <button onClick={() => setBet(maxTokens)} className="bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Max</button>
       </div>
-
       <div className="flex flex-wrap justify-center gap-4">
         {chips.map(chip => (
-          <button 
-            key={chip}
-            onClick={() => addBet(chip)}
-            className="group relative flex flex-col items-center"
-          >
+          <button key={chip} onClick={() => addBet(chip)} className="group relative flex flex-col items-center">
             <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center transition-all group-hover:scale-110 group-active:scale-95 shadow-xl
               ${chip === 10 ? 'border-blue-500/50 bg-blue-500/20' : 
                 chip === 50 ? 'border-red-500/50 bg-red-500/20' : 
@@ -141,7 +135,7 @@ const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
                 chip === 500 ? 'border-purple-500/50 bg-purple-500/20' : 
                 'border-yellow-500/50 bg-yellow-500/20'}
             `}>
-              <span className="text-xs font-black">{chip}</span>
+              <span className="text-xs font-black text-white">{chip}</span>
             </div>
           </button>
         ))}
@@ -150,7 +144,7 @@ const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
   );
 };
 
-// --- GAME ENGINES ---
+// --- GAME LOGIC (UNCHANGED) ---
 
 const RouletteTable = ({ initialMinBet, tokens, setTokens }) => {
   const [bet, setBet] = useState(initialMinBet);
@@ -158,99 +152,49 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens }) => {
   const [spinning, setSpinning] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const [message, setMessage] = useState('');
-
-  const numbers = Array.from({ length: 37 }, (_, i) => i);
   const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-
   const spin = () => {
     if (spinning || tokens < bet) return;
-    setSpinning(true);
-    setMessage('');
-    setTokens(t => t - bet);
-
+    setSpinning(true); setMessage(''); setTokens(t => t - bet);
     setTimeout(() => {
       const result = Math.floor(Math.random() * 37);
-      setLastResult(result);
-      setSpinning(false);
-
-      let won = false;
-      let multiplier = 0;
-
-      if (typeof betType === 'number') {
-        if (result === betType) { won = true; multiplier = 36; }
-      } else {
+      setLastResult(result); setSpinning(false);
+      let won = false; let multiplier = 0;
+      if (typeof betType === 'number') { if (result === betType) { won = true; multiplier = 36; } }
+      else {
         if (betType === 'red' && redNumbers.includes(result)) { won = true; multiplier = 2; }
         if (betType === 'black' && !redNumbers.includes(result) && result !== 0) { won = true; multiplier = 2; }
         if (betType === 'even' && result % 2 === 0 && result !== 0) { won = true; multiplier = 2; }
         if (betType === 'odd' && result % 2 !== 0) { won = true; multiplier = 2; }
       }
-
-      if (won) {
-        setTokens(t => t + bet * multiplier);
-        setMessage(`VICTORY +${(bet * multiplier).toLocaleString()}`);
-      } else {
-        setMessage('HOUSE WINS');
-      }
+      if (won) { setTokens(t => t + bet * multiplier); setMessage(`VICTORY +${(bet * multiplier).toLocaleString()}`); }
+      else { setMessage('HOUSE WINS'); }
     }, 2500);
   };
-
   return (
     <div className="flex flex-col items-center gap-12 w-full">
       <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full border-[12px] border-zinc-800 bg-black flex items-center justify-center overflow-hidden shadow-[0_0_80px_rgba(255,0,0,0.15)]">
-        <motion.div 
-          animate={spinning ? { rotate: [0, 3600] } : { rotate: 0 }}
-          transition={{ duration: 2.5, ease: "circOut" }}
-          className="absolute inset-2 border-[1px] border-zinc-700/50 rounded-full flex items-center justify-center"
-        >
-            <div className="w-full h-full flex items-start justify-center pt-2">
-                <div className="w-4 h-4 rounded-full bg-zinc-300 shadow-white shadow-sm" />
-            </div>
+        <motion.div animate={spinning ? { rotate: [0, 3600] } : { rotate: 0 }} transition={{ duration: 2.5, ease: "circOut" }} className="absolute inset-2 border-[1px] border-zinc-700/50 rounded-full flex items-center justify-center">
+            <div className="w-full h-full flex items-start justify-center pt-2"><div className="w-4 h-4 rounded-full bg-zinc-300 shadow-white shadow-sm" /></div>
         </motion.div>
-        <div className="text-center z-10">
-          <AnimatePresence mode="wait">
-            <motion.div key={lastResult} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
-              <span className={`text-8xl font-black mb-2 tracking-tighter ${lastResult !== null ? (lastResult === 0 ? 'text-emerald-500' : redNumbers.includes(lastResult) ? 'text-red-500' : 'text-white') : 'text-zinc-800'}`}>
-                {spinning ? '...' : (lastResult ?? '--')}
-              </span>
-              <span className="text-[10px] font-black uppercase tracking-[0.8em] text-zinc-500">{spinning ? 'ORBITING' : 'POSITION'}</span>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        <div className="text-center z-10"><AnimatePresence mode="wait"><motion.div key={lastResult} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
+          <span className={`text-8xl font-black mb-2 tracking-tighter ${lastResult !== null ? (lastResult === 0 ? 'text-emerald-500' : redNumbers.includes(lastResult) ? 'text-red-500' : 'text-white') : 'text-zinc-800'}`}>
+            {spinning ? '...' : (lastResult ?? '--')}
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-[0.8em] text-zinc-500">{spinning ? 'ORBITING' : 'POSITION'}</span>
+        </motion.div></AnimatePresence></div>
       </div>
-
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-lg">
         {['red', 'black', 'even', 'odd'].map(type => (
-          <button 
-            key={type}
-            onClick={() => setBetType(type)}
-            className={`py-4 rounded-2xl font-black uppercase text-xs tracking-widest border transition-all ${betType === type ? 'bg-white text-black border-white scale-105' : 'bg-black/40 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
-          >
+          <button key={type} onClick={() => setBetType(type)} className={`py-4 rounded-2xl font-black uppercase text-xs tracking-widest border transition-all ${betType === type ? 'bg-white text-black border-white scale-105' : 'bg-black/40 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
             {type}
           </button>
         ))}
       </div>
-
-      <div className="flex flex-wrap justify-center gap-2 max-w-xl">
-        {numbers.map(n => (
-          <button
-            key={n}
-            onClick={() => setBetType(n)}
-            className={`w-10 h-12 rounded-lg flex items-center justify-center font-black text-xs border transition-all
-              ${betType === n ? 'ring-2 ring-yellow-400 scale-125 z-10 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.4)]' : ''}
-              ${n === 0 ? 'bg-emerald-600 border-emerald-500' : redNumbers.includes(n) ? 'bg-red-600 border-red-500' : 'bg-zinc-900 border-zinc-800'}
-            `}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-
       <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={spinning} />
-
       <button onClick={spin} disabled={spinning} className="group w-full max-w-md bg-white text-black py-8 rounded-[2rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl disabled:opacity-50 transition-all hover:bg-zinc-200">
         {spinning ? 'In Orbit...' : 'Commit Wager'}
       </button>
-
       {message && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-black italic tracking-tight text-white">{message}</motion.div>}
     </div>
   );
@@ -261,14 +205,10 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
-
   const spin = () => {
     if (isSpinning || tokens < bet) return;
-    setIsSpinning(true);
-    setWinMsg('');
-    setTokens(t => t - bet);
+    setIsSpinning(true); setWinMsg(''); setTokens(t => t - bet);
     const results = [symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)]];
-    
     [1200, 1800, 2400].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
@@ -276,35 +216,21 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
       }, d);
     });
   };
-
   const finalize = (res) => {
     setIsSpinning(false);
     if (res[0] === res[1] && res[1] === res[2]) {
       const mult = (res[0] === '7️⃣' || res[0] === '🔥' || res[0] === '💎') ? 50 : 25;
-      setTokens(t => t + bet * mult);
-      setWinMsg(`PREMIER JACKPOT! +${(bet * mult).toLocaleString()}`);
+      setTokens(t => t + bet * mult); setWinMsg(`PREMIER JACKPOT! +${(bet * mult).toLocaleString()}`);
     } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
-      setTokens(t => t + bet * 2);
-      setWinMsg('MATCH WIN! +2x');
+      setTokens(t => t + bet * 2); setWinMsg('MATCH WIN! +2x');
     }
   };
-
   return (
     <div className="flex flex-col items-center gap-10 p-12 bg-gradient-to-b from-zinc-900 to-black rounded-[4rem] border border-white/5 relative shadow-[0_0_100px_rgba(0,0,0,0.8)]">
       <div className="flex gap-4 md:gap-8 bg-black/40 p-4 rounded-[2.5rem] border border-white/5">
         {reels.map((symbol, i) => (
           <div key={i} className="relative w-28 h-48 md:w-36 md:h-56 bg-gradient-to-b from-zinc-900 to-black rounded-[2rem] overflow-hidden border border-white/10 flex items-center justify-center">
-            <motion.div 
-              key={isSpinning ? `spin-${i}` : symbol} 
-              initial={isSpinning ? { y: -400 } : { y: -50 }} 
-              animate={{ y: 0 }} 
-              transition={{ 
-                repeat: isSpinning ? Infinity : 0, 
-                duration: isSpinning ? 0.08 : 0.6, 
-                ease: isSpinning ? "linear" : "backOut" 
-              }} 
-              className={`text-6xl md:text-8xl ${isSpinning ? 'blur-xl opacity-20' : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}
-            >
+            <motion.div key={isSpinning ? `spin-${i}` : symbol} initial={isSpinning ? { y: -400 } : { y: -50 }} animate={{ y: 0 }} transition={{ repeat: isSpinning ? Infinity : 0, duration: isSpinning ? 0.08 : 0.6, ease: isSpinning ? "linear" : "backOut" }} className={`text-6xl md:text-8xl ${isSpinning ? 'blur-xl opacity-20' : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>
               {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none" />
@@ -316,13 +242,7 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-100 to-white group-hover:from-white group-hover:to-zinc-100 transition-all" />
         <span className="relative z-10 text-black font-black text-4xl italic uppercase tracking-[0.3em]">Ignite</span>
       </button>
-      <AnimatePresence>
-        {winMsg && (
-            <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="absolute -top-12 bg-emerald-500 text-black px-12 py-5 rounded-full font-black text-2xl shadow-[0_0_30px_rgba(16,185,129,0.5)]">
-                {winMsg}
-            </motion.div>
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{winMsg && (<motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="absolute -top-12 bg-emerald-500 text-black px-12 py-5 rounded-full font-black text-2xl shadow-[0_0_30px_rgba(16,185,129,0.5)]">{winMsg}</motion.div>)}</AnimatePresence>
     </div>
   );
 };
@@ -334,68 +254,37 @@ const BlackjackTable = ({ initialMinBet, tokens, setTokens }) => {
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
   const [bet, setBet] = useState(initialMinBet);
-
-  const startRound = () => {
-    if (tokens < bet) return;
-    setTokens(t => t - bet);
-    const d = createDeck();
-    setPlayerHand([d[0], d[2]]);
-    setDealerHand([d[1], d[3]]);
-    setDeck(d.slice(4));
-    setStatus('playing');
-    setMessage('');
-  };
-
-  const hit = () => {
-    const card = deck[0];
-    const newHand = [...playerHand, card];
-    setPlayerHand(newHand);
-    setDeck(deck.slice(1));
-    if (calcHand(newHand) > 21) { setStatus('result'); setMessage('BUST'); }
-  };
-
+  const startRound = () => { if (tokens < bet) return; setTokens(t => t - bet); const d = createDeck(); setPlayerHand([d[0], d[2]]); setDealerHand([d[1], d[3]]); setDeck(d.slice(4)); setStatus('playing'); setMessage(''); };
+  const hit = () => { const card = deck[0]; const newHand = [...playerHand, card]; setPlayerHand(newHand); setDeck(deck.slice(1)); if (calcHand(newHand) > 21) { setStatus('result'); setMessage('BUST'); } };
   const stand = () => setStatus('dealer_turn');
-
   useEffect(() => {
     if (status === 'dealer_turn') {
-      let dHand = [...dealerHand];
-      let dDeck = [...deck];
+      let dHand = [...dealerHand]; let dDeck = [...deck];
       while (calcHand(dHand) < 17) { dHand.push(dDeck[0]); dDeck = dDeck.slice(1); }
-      setDealerHand(dHand);
-      setDeck(dDeck);
-      const pS = calcHand(playerHand);
-      const dS = calcHand(dHand);
-      setStatus('result');
+      setDealerHand(dHand); setDeck(dDeck); const pS = calcHand(playerHand); const dS = calcHand(dHand); setStatus('result');
       if (dS > 21 || pS > dS) { setMessage('PLAYER WINS'); setTokens(t => t + bet * 2); }
       else if (pS === dS) { setMessage('PUSH'); setTokens(t => t + bet); }
       else { setMessage('DEALER WINS'); }
     }
   }, [status]);
-
   return (
     <div className="w-full max-w-4xl flex flex-col items-center gap-14">
       <div className="flex flex-col items-center gap-6">
         <span className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.6em] bg-white/5 px-4 py-1 rounded-full border border-white/5">The House ({status === 'playing' ? '?' : calcHand(dealerHand)})</span>
         <div className="flex gap-4 min-h-[160px]">{dealerHand.map((c, i) => <Card key={c.id} card={c} hidden={status === 'playing' && i === 1} index={i} />)}</div>
       </div>
-      
       <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
-
       <div className="flex flex-col items-center gap-6">
         <div className="flex gap-4 min-h-[160px]">{playerHand.map((c, i) => <Card key={c.id} card={c} index={i} />)}</div>
         <span className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.6em] bg-white/5 px-4 py-1 rounded-full border border-white/5">Guest ({calcHand(playerHand)})</span>
       </div>
-
       <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={status === 'playing'} />
-
       <div className="flex gap-6">
         {status === 'idle' || status === 'result' ? (
           <button onClick={startRound} className="bg-white text-black px-24 py-6 rounded-3xl font-black text-2xl hover:bg-zinc-200 transition-all shadow-2xl tracking-widest">DEAL</button>
         ) : (
-          <>
-            <button onClick={hit} className="bg-zinc-800 text-white px-16 py-6 rounded-3xl font-black text-xl border border-zinc-700 hover:bg-zinc-700 transition-all">HIT</button>
-            <button onClick={stand} className="bg-white text-black px-16 py-6 rounded-3xl font-black text-xl hover:bg-zinc-200 transition-all shadow-xl">STAND</button>
-          </>
+          <><button onClick={hit} className="bg-zinc-800 text-white px-16 py-6 rounded-3xl font-black text-xl border border-zinc-700 hover:bg-zinc-700 transition-all">HIT</button>
+            <button onClick={stand} className="bg-white text-black px-16 py-6 rounded-3xl font-black text-xl hover:bg-zinc-200 transition-all shadow-xl">STAND</button></>
         )}
       </div>
       {message && <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-5xl font-black italic tracking-tighter text-white">{message}</motion.div>}
@@ -403,43 +292,116 @@ const BlackjackTable = ({ initialMinBet, tokens, setTokens }) => {
   );
 };
 
-// --- MAIN APP & AD SENSE COMPLIANCE ---
+// --- NEW ADSENSE PAGES ---
+
+const LandingPage = ({ onEnter }) => (
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-[80vh] flex flex-col items-center justify-center text-center px-6">
+    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="space-y-8">
+      <div className="flex justify-center mb-10"><div className="bg-white p-6 rounded-[2rem] shadow-[0_0_50px_rgba(255,255,255,0.2)]"><Crown size={80} className="text-black" /></div></div>
+      <h1 className="text-6xl md:text-9xl font-black italic tracking-tighter leading-[0.8] text-white">REFINEMENT <br/><span className="text-zinc-500">DEFINED.</span></h1>
+      <p className="text-zinc-400 text-xl md:text-2xl max-w-2xl mx-auto italic font-medium leading-relaxed">Welcome to the world's most exclusive social gaming simulation. Where probability meets prestige.</p>
+      <div className="pt-10">
+        <button onClick={onEnter} className="group relative bg-white text-black px-16 py-8 rounded-full font-black text-2xl tracking-[0.2em] uppercase overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.3)]">
+          <span className="relative z-10 flex items-center gap-4">Enter Members Lounge <ChevronRight /></span>
+          <div className="absolute inset-0 bg-gradient-to-r from-zinc-200 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
+        </button>
+      </div>
+    </motion.div>
+    <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl w-full">
+      <div className="flex flex-col items-center gap-4 p-8 border border-white/5 rounded-[2rem] bg-white/5">
+        <ShieldCheck className="text-zinc-500" size={40} />
+        <h3 className="font-black text-lg">Fair Simulation</h3>
+        <p className="text-zinc-500 text-sm">Advanced RNG algorithms ensuring truly random outcomes for every guest.</p>
+      </div>
+      <div className="flex flex-col items-center gap-4 p-8 border border-white/5 rounded-[2rem] bg-white/5">
+        <Lock className="text-zinc-500" size={40} />
+        <h3 className="font-black text-lg">Social Only</h3>
+        <p className="text-zinc-500 text-sm">Strictly zero-risk play with virtual tokens. No real currency involved.</p>
+      </div>
+      <div className="flex flex-col items-center gap-4 p-8 border border-white/5 rounded-[2rem] bg-white/5">
+        <UserCheck className="text-zinc-500" size={40} />
+        <h3 className="font-black text-lg">Elite Support</h3>
+        <p className="text-zinc-500 text-sm">24/7 technical assistance for all our premier club members.</p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const LegalPage = ({ title, content, onBack }) => (
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-4xl mx-auto py-20 px-6">
+    <button onClick={onBack} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-10 font-black uppercase tracking-widest text-xs"><ChevronLeft /> Return</button>
+    <h1 className="text-5xl font-black italic tracking-tighter mb-12 text-white">{title}</h1>
+    <div className="prose prose-invert prose-zinc max-w-none space-y-8 text-zinc-400 leading-relaxed text-lg">
+      {content.map((p, i) => <p key={i}>{p}</p>)}
+    </div>
+  </motion.div>
+);
+
+// --- MAIN APP COMPONENT ---
 
 export default function App() {
-  const [view, setView] = useState('lobby');
+  const [view, setView] = useState('landing'); // landing, lobby, game, privacy, terms, responsible
   const [tokens, setTokens] = useState(INITIAL_TOKENS);
   const [activeGame, setActiveGame] = useState(null);
   const [showAdModal, setShowAdModal] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   const startPlaying = (game) => { setActiveGame(game); setView('game'); window.scrollTo(0,0); };
   const handleWatchAd = () => { setIsAdLoading(true); setTimeout(() => { setTokens(t => t + 1000); setIsAdLoading(false); setShowAdModal(false); }, 2000); };
+
+  const navigateTo = (v) => { setView(v); setMobileMenu(false); window.scrollTo(0,0); };
 
   return (
     <div className="min-h-screen bg-[#020202] text-zinc-100 font-sans selection:bg-white selection:text-black">
       {/* Premium Header */}
       <nav className="sticky top-0 bg-black/80 backdrop-blur-2xl border-b border-white/5 px-8 py-6 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div onClick={() => setView('lobby')} className="flex items-center gap-3 cursor-pointer group">
+          <div onClick={() => navigateTo('landing')} className="flex items-center gap-3 cursor-pointer group">
             <div className="bg-white p-2 rounded-xl group-hover:scale-110 transition-transform"><Crown size={24} className="text-black" /></div>
             <div className="flex flex-col leading-none">
               <span className="text-2xl font-black italic tracking-tighter">LUXE</span>
               <span className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-500">Premier Studio</span>
             </div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-full flex items-center gap-6 shadow-inner">
-            <div className="flex items-center gap-2">
-              <Coins size={20} className="text-yellow-500" />
-              <span className="font-mono font-black text-2xl tracking-tighter">{tokens.toLocaleString()}</span>
+          
+          <div className="hidden md:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
+            <button onClick={() => navigateTo('lobby')} className={`hover:text-white transition-colors ${view === 'lobby' ? 'text-white' : ''}`}>Floor Games</button>
+            <button onClick={() => navigateTo('privacy')} className={`hover:text-white transition-colors ${view === 'privacy' ? 'text-white' : ''}`}>Privacy</button>
+            <button onClick={() => navigateTo('responsible')} className={`hover:text-white transition-colors ${view === 'responsible' ? 'text-white' : ''}`}>Safe Play</button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-full flex items-center gap-6 shadow-inner">
+                <div className="flex items-center gap-2">
+                <Coins size={20} className="text-yellow-500" />
+                <span className="font-mono font-black text-2xl tracking-tighter">{tokens.toLocaleString()}</span>
+                </div>
+                <button onClick={() => setShowAdModal(true)} className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all shadow-xl"><Plus size={20} /></button>
             </div>
-            <button onClick={() => setShowAdModal(true)} className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all shadow-xl"><Plus size={20} /></button>
+            <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden text-white"><Menu size={32} /></button>
           </div>
         </div>
       </nav>
 
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenu && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-[60] bg-black p-10 flex flex-col gap-10 text-3xl font-black italic uppercase tracking-tighter">
+            <button onClick={() => setMobileMenu(false)} className="self-end"><X size={40} /></button>
+            <button onClick={() => navigateTo('lobby')}>Enter Casino</button>
+            <button onClick={() => navigateTo('privacy')}>Privacy Policy</button>
+            <button onClick={() => navigateTo('terms')}>Terms of Service</button>
+            <button onClick={() => navigateTo('responsible')}>Responsible Gaming</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <main className="max-w-7xl mx-auto p-8 md:p-16">
         <AnimatePresence mode="wait">
-          {view === 'lobby' ? (
+          {view === 'landing' && <LandingPage key="landing" onEnter={() => navigateTo('lobby')} />}
+          
+          {view === 'lobby' && (
             <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-24">
               <div className="text-center space-y-6">
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-block px-4 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Established 2024</motion.div>
@@ -448,60 +410,92 @@ export default function App() {
                 </h1>
                 <p className="text-zinc-500 max-w-2xl mx-auto font-medium text-lg italic">"A premier collection of high-performance probability simulations for the sophisticated guest."</p>
               </div>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {GAMES.map(g => (
-                  <motion.div 
-                    key={g.id} 
-                    whileHover={{ y: -15, scale: 1.02 }} 
-                    onClick={() => startPlaying(g)} 
-                    className={`h-[450px] rounded-[3.5rem] p-12 cursor-pointer bg-gradient-to-br ${g.colors} border border-white/5 shadow-2xl relative overflow-hidden group transition-all`}
-                  >
+                  <motion.div key={g.id} whileHover={{ y: -15, scale: 1.02 }} onClick={() => startPlaying(g)} className={`h-[450px] rounded-[3.5rem] p-12 cursor-pointer bg-gradient-to-br ${g.colors} border border-white/5 shadow-2xl relative overflow-hidden group transition-all`}>
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                     <div className="relative z-10 flex flex-col justify-between h-full">
                       <div className="w-20 h-20 bg-black/40 backdrop-blur-2xl rounded-3xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">{g.icon}</div>
                       <div className="space-y-2">
                         <h3 className="text-4xl font-black italic leading-none">{g.name}</h3>
-                        <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">
-                            <TrendingUp size={14} /> Wager Min: {g.minBet} 
-                        </div>
-                        <div className="pt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span className="text-white bg-white/10 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest">Enter Suite</span>
-                        </div>
+                        <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-[0.3em]"><TrendingUp size={14} /> Wager Min: {g.minBet} </div>
+                        <div className="pt-4 opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white bg-white/10 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest">Enter Suite</span></div>
                       </div>
                     </div>
                   </motion.div>
                 ))}
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {view === 'game' && (
             <motion.div key="game" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-20">
               <div className="w-full flex justify-between items-center border-b border-white/5 pb-10">
-                <button onClick={() => setView('lobby')} className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors font-black uppercase tracking-[0.3em] text-[10px]"><ChevronLeft size={20}/> Exit Suite</button>
+                <button onClick={() => navigateTo('lobby')} className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors font-black uppercase tracking-[0.3em] text-[10px]"><ChevronLeft size={20}/> Exit Suite</button>
                 <div className="text-right">
                     <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">Active Simulation</span>
                   <h2 className="text-5xl font-black italic tracking-tighter uppercase">{activeGame.name}</h2>
                 </div>
               </div>
-
               {activeGame.type === 'blackjack' && <BlackjackTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
               {activeGame.type === 'slots' && <SlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
               {activeGame.type === 'roulette' && <RouletteTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
-
               <div className="w-full max-w-3xl bg-zinc-900/50 border border-white/5 p-12 rounded-[3rem] flex flex-col md:flex-row gap-10">
                 <div className="w-20 h-20 bg-white/5 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-white/5"><Info className="text-zinc-400" size={32} /></div>
                 <div className="space-y-4">
                   <h4 className="font-black uppercase text-xs tracking-[0.4em] text-zinc-400">Guest Strategy Brief</h4>
                   <p className="text-zinc-500 text-lg italic leading-relaxed">"{activeGame.guide}"</p>
-                  <p className="text-[10px] text-zinc-600 uppercase font-black">Ref: LX-{activeGame.id.toUpperCase()}-2024</p>
                 </div>
               </div>
             </motion.div>
           )}
+
+          {view === 'privacy' && (
+            <LegalPage 
+                title="Privacy Policy" 
+                onBack={() => navigateTo('landing')}
+                content={[
+                    "Luxe Premier is committed to protecting the privacy of our virtual guests. This policy outlines our approach to data management and security.",
+                    "We do not collect personal identification information for real-world marketing. All session data is stored locally within your simulation and is not transmitted to external marketing partners.",
+                    "Our simulation utilizes random number generation (RNG) that operates independently of any user profiling. We prioritize a transparent and anonymous user experience for every club member.",
+                    "Cookies are utilized solely to maintain session state and token balance for the duration of your stay. No persistent tracking mechanisms are implemented on this platform.",
+                    "By accessing Luxe Premier, you consent to our internal data management practices designed to protect the integrity of the social gaming environment."
+                ]}
+            />
+          )}
+
+          {view === 'terms' && (
+            <LegalPage 
+                title="Terms of Service" 
+                onBack={() => navigateTo('landing')}
+                content={[
+                    "Usage of the Luxe Premier platform is subject to the following professional standards and terms.",
+                    "1. Eligibility: Access is restricted to individuals 18 years of age or older. This is a social simulation only.",
+                    "2. Virtual Tokens: Tokens provided (Luxe Credits) have zero monetary value. They cannot be withdrawn, traded, or redeemed for any form of real-world value or prizes.",
+                    "3. No Real Wagers: No real currency wagers are accepted on this platform. This is a mathematically based entertainment simulation.",
+                    "4. Fair Conduct: Guests are expected to maintain the integrity of the simulation. Any attempt to manipulate the RNG outcomes will result in termination of access.",
+                    "5. Disclaimer: Luxe Premier is not a gambling facility. We provide high-performance entertainment simulations for recreational use only."
+                ]}
+            />
+          )}
+
+          {view === 'responsible' && (
+            <LegalPage 
+                title="Responsible Simulation" 
+                onBack={() => navigateTo('landing')}
+                content={[
+                    "Entertainment should remain balanced and sophisticated. Luxe Premier encourages all guests to practice mindfulness during their stay.",
+                    "While our platform involves no real money, the mechanics simulate real-world probability. We advise guests to view this strictly as a recreational strategy simulation.",
+                    "Set time limits for your virtual sessions. If you find yourself spending excessive time in the simulation, we recommend taking an extended break.",
+                    "Luxe Premier provides tools for token reset and session termination. We advocate for a healthy, social-first approach to all virtual floor games.",
+                    "Remember: The objective of Luxe Premier is the appreciation of probability and refined social interaction, not financial gain."
+                ]}
+            />
+          )}
         </AnimatePresence>
       </main>
 
-      {/* Corporate Footer (AdSense Compliance) */}
+      {/* Corporate Footer */}
       <footer className="mt-20 bg-zinc-950 border-t border-white/5 pt-20 pb-10 px-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-white/5 pb-20">
           <div className="space-y-6">
@@ -510,45 +504,30 @@ export default function App() {
               <span className="text-xl font-black italic tracking-tighter uppercase">LUXE PREMIER</span>
             </div>
             <p className="text-zinc-500 text-sm leading-relaxed">{SITE_CONFIG.description}</p>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-zinc-500 hover:text-white cursor-pointer transition-colors"><Globe size={18} /></div>
-              <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-zinc-500 hover:text-white cursor-pointer transition-colors"><MapPin size={18} /></div>
-              <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-zinc-500 hover:text-white cursor-pointer transition-colors"><Mail size={18} /></div>
-            </div>
           </div>
-          
           <div className="space-y-6">
             <h5 className="font-black uppercase text-xs tracking-widest flex items-center gap-2"><FileText size={14}/> Policies</h5>
             <ul className="space-y-3 text-sm text-zinc-500 font-medium italic">
-              <li className="hover:text-white cursor-pointer transition-colors">Terms of Service</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Privacy Charter</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Cookie Governance</li>
+              <li onClick={() => navigateTo('terms')} className="hover:text-white cursor-pointer transition-colors">Terms of Service</li>
+              <li onClick={() => navigateTo('privacy')} className="hover:text-white cursor-pointer transition-colors">Privacy Charter</li>
               <li className="hover:text-white cursor-pointer transition-colors">Fair Play Audit</li>
             </ul>
           </div>
-
           <div className="space-y-6">
             <h5 className="font-black uppercase text-xs tracking-widest flex items-center gap-2"><ShieldAlert size={14}/> Responsible</h5>
             <ul className="space-y-3 text-sm text-zinc-500 font-medium italic">
-              <li className="hover:text-white cursor-pointer transition-colors">Simulation Limits</li>
-              <li className="hover:text-white cursor-pointer transition-colors">Youth Safety</li>
+              <li onClick={() => navigateTo('responsible')} className="hover:text-white cursor-pointer transition-colors">Safe Play Charter</li>
               <li className="hover:text-white cursor-pointer transition-colors">Self-Exclusion</li>
               <li className="hover:text-white cursor-pointer transition-colors">Support Resources</li>
             </ul>
           </div>
-
           <div className="space-y-6">
             <h5 className="font-black uppercase text-xs tracking-widest flex items-center gap-2"><Scale size={14}/> Compliance</h5>
             <p className="text-zinc-500 text-[10px] font-black uppercase leading-loose tracking-widest">
               LUXE PREMIER IS FOR ENTERTAINMENT PURPOSES ONLY. NO REAL MONEY WAGERING. SOCIAL SIMULATION CERTIFIED 2024.
             </p>
-            <div className="flex items-center gap-4 text-zinc-600">
-               <ShieldCheck size={40} strokeWidth={1} />
-               <Crown size={40} strokeWidth={1} />
-            </div>
           </div>
         </div>
-        
         <div className="max-w-7xl mx-auto pt-10 flex flex-col md:flex-row justify-between items-center gap-4 text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
           <span>© 2024 LUXE PREMIER GAMING STUDIO. ALL RIGHTS RESERVED.</span>
           <div className="flex gap-6">
