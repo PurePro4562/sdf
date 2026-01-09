@@ -2,12 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="description" content="LuxeBlack — Social gaming simulator with virtual tokens for entertainment. We use Google OAuth for authentication and collect minimal anonymized analytics. See our Privacy Policy for details." />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>luxe-casino</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZLYC1Z97YB"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);} 
+      gtag('js', new Date());
+
+      gtag('config', 'G-ZLYC1Z97YB');
+    </script>
   </head>
   <body>
+    <header class="bg-black text-white p-6">
+      <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold">LuxeBlack — The World's Most Refined Social Gaming Simulation</h1>
+        <p class="mt-2">LuxeBlack is a free social gaming simulator for entertainment. We use Google OAuth for authentication and collect minimal anonymized analytics to improve the experience. See our <a href="/privacy.html" class="underline">Privacy Policy</a> for details. The privacy policy link on this page should match the URL you set on your OAuth consent screen.</p>
+        <p class="mt-2"><strong>Data used:</strong> basic profile info for login and anonymized analytics. No real-money transactions or prize redemption.</p>
+        <p class="mt-2">Contact: <a href="mailto:privacy@yourdomain.com" class="underline">privacy@yourdomain.com</a></p>
+      </div>
+    </header>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

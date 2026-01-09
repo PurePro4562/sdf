@@ -279,21 +279,28 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
   const spin = () => {
     if (isSpinning || tokens < bet) return;
     setIsSpinning(true); setWinMsg(''); setTokens(t => t - bet);
+    playSpinSound('default');
     const results = [symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)]];
-    [1200, 1800, 2400].forEach((d, i) => {
+    [700, 1200, 1700].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
-        if (i === 2) finalize(results);
+        playReelStopSound('default');
+        if (i === 2) setTimeout(() => finalize(results), 150);
       }, d);
     });
   };
   const finalize = (res) => {
     setIsSpinning(false);
+    let mult = 0;
     if (res[0] === res[1] && res[1] === res[2]) {
-      const mult = (res[0] === '7️⃣' || res[0] === '🔥' || res[0] === '💎') ? 50 : 25;
+      mult = (res[0] === '7️⃣' || res[0] === '🔥' || res[0] === '💎') ? 50 : 25;
       setTokens(t => t + bet * mult); setWinMsg(`PREMIER JACKPOT! +${(bet * mult).toLocaleString()}`);
     } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
-      setTokens(t => t + bet * 2); setWinMsg('MATCH WIN! +2x');
+      mult = 2;
+      setTokens(t => t + bet * mult); setWinMsg('MATCH WIN! +2x');
+    }
+    if (mult > 0) {
+      playWinSound(mult, 'default');
     }
   };
   return (
@@ -301,7 +308,7 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
       <div className="flex gap-4 md:gap-8 bg-black/40 p-4 rounded-[2.5rem] border border-white/5">
         {reels.map((symbol, i) => (
           <div key={i} className="relative w-28 h-48 md:w-36 md:h-56 bg-gradient-to-b from-zinc-900 to-black rounded-[2rem] overflow-hidden border border-white/10 flex items-center justify-center">
-            <motion.div key={isSpinning ? `spin-${i}` : symbol} initial={isSpinning ? { y: -400 } : { y: -50 }} animate={{ y: 0 }} transition={{ repeat: isSpinning ? Infinity : 0, duration: isSpinning ? 0.08 : 0.6, ease: isSpinning ? "linear" : "backOut" }} className={`text-6xl md:text-8xl ${isSpinning ? 'blur-xl opacity-20' : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>
+            <motion.div key={isSpinning ? `spin-${i}` : symbol} initial={isSpinning ? { y: -400 } : { y: -50 }} animate={{ y: 0 }} transition={{ repeat: isSpinning ? Infinity : 0, duration: isSpinning ? 0.06 : 0.4, ease: isSpinning ? "linear" : "backOut" }} className={`text-6xl md:text-8xl ${isSpinning ? 'blur-xl opacity-20' : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>
               {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none" />
@@ -313,7 +320,13 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-100 to-white group-hover:from-white group-hover:to-zinc-100 transition-all" />
         <span className="relative z-10 text-black font-black text-4xl italic uppercase tracking-[0.3em]">Ignite</span>
       </button>
-      <AnimatePresence>{winMsg && (<motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="absolute -top-12 bg-emerald-500 text-black px-12 py-5 rounded-full font-black text-2xl shadow-[0_0_30px_rgba(16,185,129,0.5)]">{winMsg}</motion.div>)}</AnimatePresence>
+      <AnimatePresence>
+        {winMsg && (
+          <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="absolute -top-16 z-50 bg-emerald-500 text-black px-12 py-5 rounded-full font-black text-2xl shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+            {winMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -606,7 +619,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
     
-    [800, 1600, 2800].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { 
           const n = [...prev]; 
@@ -615,7 +628,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
         });
         playReelStopSound('default');
         if (i === 2) {
-          setTimeout(() => finalize(results), 300);
+          setTimeout(() => finalize(results), 150);
         }
       }, d);
     });
@@ -675,7 +688,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
   return (
     <div 
       ref={containerRef}
-      className={`flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-cyan-900/30 via-blue-900/30 via-purple-900/30 to-pink-900/30 rounded-[4rem] border-2 border-white/10 relative shadow-[0_0_200px_rgba(0,0,0,0.8)] overflow-hidden ${
+      className={`flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-cyan-900/30 via-blue-900/30 via-purple-900/30 to-pink-900/30 rounded-[4rem] border-2 border-white/10 relative shadow-[0_0_200px_rgba(0,0,0,0.8)] overflow-visible ${
         screenShake ? 'animate-pulse' : ''
       }`}
       style={{
@@ -836,15 +849,15 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
               y: [100, 0]
             }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-8 bg-gradient-to-r from-yellow-400 via-pink-400 to-cyan-400 text-black px-16 py-6 rounded-full font-black text-3xl md:text-4xl shadow-[0_0_50px_rgba(255,215,0,0.8)] border-4 border-white/50"
+            className="absolute -top-16 z-50 bg-gradient-to-r from-yellow-400 via-pink-400 to-cyan-400 text-black px-16 py-6 rounded-full font-black text-3xl md:text-4xl shadow-[0_0_50px_rgba(255,215,0,0.8)] border-4 border-white/50"
             style={{
               textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-              animation: 'pulse 1s infinite'
+              animation: 'pulse 0.7s infinite'
             }}
           >
             <motion.div
               animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.5, repeat: Infinity }}
+              transition={{ duration: 0.35, repeat: Infinity }}
             >
               {winMsg}
             </motion.div>
@@ -898,11 +911,11 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [900, 1800, 3000].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
         playReelStopSound('ocean');
-        if (i === 2) setTimeout(() => finalize(results), 400);
+        if (i === 2) setTimeout(() => finalize(results), 200);
       }, d);
     });
   };
@@ -968,7 +981,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [800, 1600, 2800].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
         playReelStopSound('ocean');
@@ -1037,8 +1050,8 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
               key={isSpinning ? `spin-${i}` : `stop-${i}`}
               initial={isSpinning ? { y: -600 } : { y: 0 }}
               animate={isSpinning ? { y: [0, 600], rotate: [0, 180] } : { y: 0, scale: [1, 1.2, 1] }}
-              transition={isSpinning ? { duration: 0.1, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
-              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_30px_rgba(0,255,255,0.6)]'}`}
+              transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_30px_rgba(0,255,255,0.6)]'}`}}
             >
               {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
             </motion.div>
@@ -1062,7 +1075,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
+          transition={{ duration: 0.35, repeat: Infinity }}
           className="absolute top-4 bg-gradient-to-r from-cyan-400 to-teal-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_30px_rgba(0,255,255,0.8)]"
         >
           🎁 BONUS: {bonusSpins} SPINS 🎁
@@ -1097,7 +1110,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-8 bg-gradient-to-r from-cyan-400 to-teal-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(0,255,255,0.8)] border-4 border-white/50"
+            className="absolute -top-16 z-50 bg-gradient-to-r from-cyan-400 to-teal-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(0,255,255,0.8)] border-4 border-white/50"
           >
             {winMsg}
           </motion.div>
@@ -1161,11 +1174,11 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [1000, 2000, 3200].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
         playReelStopSound('default');
-        if (i === 2) setTimeout(() => finalize(results), 400);
+        if (i === 2) setTimeout(() => finalize(results), 150);
       }, d);
     });
   };
@@ -1229,9 +1242,10 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [800, 1600, 2800].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('default');
         if (i === 2) {
           setTimeout(() => {
             setIsSpinning(false);
@@ -1239,7 +1253,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
             setTokens(t => t + bet * bonusMult);
             setWinMsg(`🌌 BONUS WIN! +${(bet * bonusMult).toLocaleString()} (${bonusSpins - 1} left)`);
             playWinSound(bonusMult, 'cosmic');
-          }, 300);
+          }, 150);
         }
       }, d);
     });
@@ -1298,7 +1312,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
               key={isSpinning ? `spin-${i}` : `stop-${i}`}
               initial={isSpinning ? { y: -600, rotate: 0 } : { y: 0 }}
               animate={isSpinning ? { y: [0, 600], rotate: [0, 360] } : { y: 0, scale: [1, 1.3, 1] }}
-              transition={isSpinning ? { duration: 0.09, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+              transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
               className={`text-7xl md:text-9xl ${isSpinning ? 'blur-md opacity-30' : 'drop-shadow-[0_0_40px_rgba(138,43,226,0.8)]'}`}
               style={{
                 filter: isSpinning ? 'none' : 'brightness(1.2)',
@@ -1327,7 +1341,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
+          transition={{ duration: 0.35, repeat: Infinity }}
           className="absolute top-4 bg-gradient-to-r from-purple-400 to-pink-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_40px_rgba(138,43,226,0.9)]"
         >
           🌌 BONUS: {bonusSpins} FREE SPINS 🌌
@@ -1362,7 +1376,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-8 bg-gradient-to-r from-purple-400 to-pink-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_60px_rgba(138,43,226,0.9)] border-4 border-white/50"
+            className="absolute -top-16 z-50 bg-gradient-to-r from-purple-400 to-pink-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_60px_rgba(138,43,226,0.9)] border-4 border-white/50"
           >
             {winMsg}
           </motion.div>
@@ -1414,11 +1428,11 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [950, 1900, 3100].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
         playReelStopSound('default');
-        if (i === 2) setTimeout(() => finalize(results), 400);
+        if (i === 2) setTimeout(() => finalize(results), 150);
       }, d);
     });
   };
@@ -1484,9 +1498,10 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [800, 1600, 2800].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('default');
         if (i === 2) {
           setTimeout(() => {
             setIsSpinning(false);
@@ -1501,7 +1516,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-amber-900/40 via-yellow-800/40 to-orange-900/40 rounded-[4rem] border-2 border-yellow-500/20 relative shadow-[0_0_200px_rgba(255,215,0,0.4)] overflow-hidden">
+    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-amber-900/40 via-yellow-800/40 to-orange-900/40 rounded-[4rem] border-2 border-yellow-500/20 relative shadow-[0_0_200px_rgba(255,215,0,0.4)] overflow-visible">
       {/* Sand particles */}
       <AnimatePresence>
         {sandParticles.map(particle => (
@@ -1547,8 +1562,8 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
               key={isSpinning ? `spin-${i}` : `stop-${i}`}
               initial={isSpinning ? { y: -600 } : { y: 0 }}
               animate={isSpinning ? { y: [0, 600], rotate: [0, -180] } : { y: 0, scale: [1, 1.25, 1] }}
-              transition={isSpinning ? { duration: 0.1, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
-              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(255,215,0,0.7)]'}`}
+              transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(255,215,0,0.7)]'}`}}
             >
               {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
             </motion.div>
@@ -1572,7 +1587,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
+          transition={{ duration: 0.35, repeat: Infinity }}
           className="absolute top-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_40px_rgba(255,215,0,0.9)]"
         >
           🏺 BONUS: {bonusSpins} SPINS 🏺
@@ -1658,12 +1673,12 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [700, 1400, 2400].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
         playReelStopSound('cyber');
         createGlitch();
-        if (i === 2) setTimeout(() => finalize(results), 300);
+        if (i === 2) setTimeout(() => finalize(results), 150);
       }, d);
     });
   };
@@ -1729,7 +1744,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [700, 1400, 2400].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
         createGlitch();
@@ -1747,7 +1762,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-fuchsia-900/40 via-purple-900/40 to-indigo-900/40 rounded-[4rem] border-2 border-fuchsia-500/20 relative shadow-[0_0_200px_rgba(255,0,255,0.5)] overflow-hidden">
+    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-fuchsia-900/40 via-purple-900/40 to-indigo-900/40 rounded-[4rem] border-2 border-fuchsia-500/20 relative shadow-[0_0_200px_rgba(255,0,255,0.5)] overflow-visible">
       {/* Glitch lines */}
       <AnimatePresence>
         {glitchLines.map(line => (
@@ -1802,7 +1817,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
                 rotate: [0, 360],
                 x: [0, Math.random() * 10 - 5, 0]
               } : { y: 0, scale: [1, 1.3, 1] }}
-              transition={isSpinning ? { duration: 0.07, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+              transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
               className={`text-7xl md:text-9xl ${isSpinning ? 'blur-[2px] opacity-35' : 'drop-shadow-[0_0_50px_rgba(255,0,255,0.9)]'}`}
               style={{
                 filter: isSpinning ? 'none' : 'brightness(1.3) contrast(1.2)',
@@ -1831,7 +1846,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
+          transition={{ duration: 0.35, repeat: Infinity }}
           className="absolute top-4 bg-gradient-to-r from-fuchsia-400 to-purple-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_50px_rgba(255,0,255,1)]"
         >
           🔮 BONUS: {bonusSpins} SPINS 🔮
@@ -1919,11 +1934,11 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [850, 1700, 2900].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
         playReelStopSound('default');
-        if (i === 2) setTimeout(() => finalize(results), 400);
+        if (i === 2) setTimeout(() => finalize(results), 150);
       }, d);
     });
   };
@@ -1989,9 +2004,10 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
       symbols[Math.floor(Math.random() * symbols.length)]
     ];
 
-    [800, 1600, 2800].forEach((d, i) => {
+    [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        playReelStopSound('default');
         if (i === 2) {
           setTimeout(() => {
             setIsSpinning(false);
@@ -2006,7 +2022,7 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-green-900/40 via-emerald-900/40 to-teal-900/40 rounded-[4rem] border-2 border-green-500/20 relative shadow-[0_0_200px_rgba(0,255,0,0.4)] overflow-hidden">
+    <div ref={containerRef} className="flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-green-900/40 via-emerald-900/40 to-teal-900/40 rounded-[4rem] border-2 border-green-500/20 relative shadow-[0_0_200px_rgba(0,255,0,0.4)] overflow-visible">
       {/* Falling leaves */}
       <AnimatePresence>
         {leaves.map(leaf => (
@@ -2062,7 +2078,7 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
               key={isSpinning ? `spin-${i}` : `stop-${i}`}
               initial={isSpinning ? { y: -600 } : { y: 0 }}
               animate={isSpinning ? { y: [0, 600], rotate: [0, 180] } : { y: 0, scale: [1, 1.2, 1] }}
-              transition={isSpinning ? { duration: 0.1, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+              transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
               className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(0,255,0,0.7)]'}`}
             >
               {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
@@ -2087,7 +2103,7 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
+          transition={{ duration: 0.35, repeat: Infinity }}
           className="absolute top-4 bg-gradient-to-r from-green-400 to-emerald-400 text-black px-8 py-4 rounded-full font-black text-2xl shadow-[0_0_40px_rgba(0,255,0,0.9)]"
         >
           🌿 BONUS: {bonusSpins} SPINS 🌿
@@ -2452,7 +2468,7 @@ const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet }) =>
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
+          transition={{ duration: 0.35, repeat: Infinity }}
           className="absolute top-20 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 text-black px-10 py-5 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(255,215,0,1)]"
         >
           🎁 LUXEBLACK BONUS: {bonusSpins} SPINS 🎁
