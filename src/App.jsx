@@ -19,7 +19,7 @@ const SITE_CONFIG = {
 };
 
 const GAMES = [
-  { id: 'plinko', type: 'plinko', name: 'Plinko', colors: 'from-yellow-900 via-amber-900 to-orange-900', minBet: 5, icon: <CircleDot className="text-yellow-400" size={32} />, guide: "Plinko is a Galton-board style drop—adjust rows and risk. Edge bins can pay big; center pays small. 99% RTP with provably-fair verification." },
+  { id: 'plinko', type: 'plinko', name: 'Plinko', colors: 'from-yellow-900 via-amber-900 to-orange-900', minBet: 25, icon: <CircleDot className="text-yellow-400" size={32} />, guide: "Plinko — triangle board, big-stakes drops. Adjust rows, balls and risk; edge bins pay huge. 99% RTP with provably-fair verification." },
   { 
     id: 'blackjack', 
     type: 'blackjack', 
