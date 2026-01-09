@@ -2344,7 +2344,7 @@ const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet }) =>
   return (
     <div 
       ref={containerRef}
-      className={`flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-black via-zinc-900 via-purple-900/20 to-black rounded-[4rem] border-2 border-yellow-500/30 relative shadow-[0_0_300px_rgba(255,215,0,0.3)] overflow-hidden ${
+      className={`flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-black via-zinc-900 via-purple-900/20 to-black rounded-[4rem] border-2 border-yellow-500/30 relative shadow-[0_0_300px_rgba(255,215,0,0.3)] overflow-visible ${
         screenShake ? 'animate-pulse' : ''
       }`}
       style={{
@@ -2538,7 +2538,7 @@ const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet }) =>
               y: [100, 0]
             }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-12 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 text-black px-20 py-8 rounded-full font-black text-4xl md:text-5xl shadow-[0_0_80px_rgba(255,215,0,1)] border-4 border-white/60"
+            className="absolute z-50 -top-12 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 text-black px-20 py-8 rounded-full font-black text-4xl md:text-5xl shadow-[0_0_80px_rgba(255,215,0,1)] border-4 border-white/60"
             style={{
               textShadow: '3px 3px 6px rgba(0,0,0,0.5)',
             }}
@@ -2697,6 +2697,35 @@ const PlinkoGame = ({ tokens, setTokens, minBet = 5, showNotification }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [lastResult, setLastResult] = useState(null);
 
+  // Animated drop area refs & state
+  const dropAreaRef = useRef(null);
+  const [activeBalls, setActiveBalls] = useState([]); // {id, leftPercent, duration, landed, mult, win}
+  const [plinkoParticles, setPlinkoParticles] = useState([]);
+  const [plinkoRipples, setPlinkoRipples] = useState([]);
+
+  const getColumnLeftPercent = (i) => ((i + 0.5) / (rows + 1)) * 100;
+
+  const generatePlinkoConfetti = (leftPercent) => {
+    const colors = ['#ffd700','#ff6b6b','#4ecdc4','#45b7d1'];
+    const newParticles = [];
+    for (let i=0;i<32;i++) {
+      newParticles.push({
+        id: `${Date.now()}-${i}`,
+        left: leftPercent + (Math.random()*6 - 3),
+        top: 72 + Math.random()*8,
+        color: colors[Math.floor(Math.random()*colors.length)],
+        delay: Math.random() * 0.6
+      });
+    }
+    setPlinkoParticles(p => [...p, ...newParticles]);
+    setTimeout(() => setPlinkoParticles(p => p.filter(pp => !newParticles.some(n => n.id === pp.id))), 2200);
+  };
+
+  const createRipple = (leftPercent) => {
+    const id = `r-${Date.now()}-${Math.floor(Math.random()*9999)}`;
+    setPlinkoRipples(r => [...r, { id, left: leftPercent }]);
+    setTimeout(() => setPlinkoRipples(r => r.filter(x => x.id !== id)), 800);
+  };
   useEffect(() => {
     (async () => {
       const h = await sha256Hex(serverSeed);
@@ -2751,8 +2780,10 @@ const PlinkoGame = ({ tokens, setTokens, minBet = 5, showNotification }) => {
     setTokens(t => t - bet);
     let totalWin = 0;
     let nonce = 0;
+
     for (let b = 0; b < balls; b++) {
       let rights = 0;
+      // compute final bin using provably-fair randomness
       for (let r = 0; r < rows; r++) {
         const rnum = await randomFromSeed(serverSeed, clientSeed, nonce++);
         if (rnum > 0.5) rights++;
@@ -2762,16 +2793,49 @@ const PlinkoGame = ({ tokens, setTokens, minBet = 5, showNotification }) => {
       const win = bet * mult;
       totalWin += win;
       setLastResult({ binIndex, mult, win });
-      playReelStopSound('default');
-      await new Promise(res => setTimeout(res, 200 + (30 * rows)));
+
+      // Create an animated ball
+      const id = `${Date.now()}-${b}-${Math.floor(Math.random()*9999)}`;
+      const duration = 0.85 + rows * 0.04;
+      const startLeft = 50;
+      setActiveBalls(prev => [...prev, { id, leftPercent: startLeft, duration, landed: false, mult, win }]);
+
+      // play small ticks while the ball 'falls'
+      for (let r = 0; r < rows; r++) {
+        setTimeout(() => playReelStopSound('default'), Math.floor((duration * 1000) * (r / rows)));
+      }
+
+      // nudge ball to its final column a little after start
+      const targetLeft = getColumnLeftPercent(binIndex);
+      setTimeout(() => {
+        setActiveBalls(prev => prev.map(a => a.id === id ? { ...a, leftPercent: targetLeft } : a));
+      }, 80);
+
+      // wait for animation to finish
+      await new Promise(res => setTimeout(res, duration * 1000 + 120));
+
+      // mark landed, reward, ripple and generate confetti on wins
+      setActiveBalls(prev => prev.map(a => a.id === id ? { ...a, landed: true } : a));
+      createRipple(targetLeft);
+
+      if (win > 0) {
+        generatePlinkoConfetti(targetLeft);
+        setTokens(t => t + win);
+        showNotification(`PLINKO WIN! +${win.toLocaleString()}`);
+        playWinSound(Math.max(1, Math.round((win / bet) || 1)),'default');
+      } else {
+        showNotification('PLINKO DROP — NO WIN');
+      }
+
+      // small delay then remove ball from view
+      setTimeout(() => setActiveBalls(prev => prev.filter(a => a.id !== id)), 700);
     }
-    if (totalWin > 0) {
-      setTokens(t => t + totalWin);
-      showNotification(`PLINKO WIN! +${totalWin.toLocaleString()} (${balls} ball${balls>1?'s':''})`);
-      playWinSound(Math.max(1, Math.round((totalWin / bet) || 1)),'default');
-    } else {
-      showNotification('NO LUCK — TRY AGAIN');
+
+    // If more than one ball, summarize total
+    if (balls > 1) {
+      if (totalWin > 0) showNotification(`PLINKO WIN! +${totalWin.toLocaleString()} (${balls} balls)`);
     }
+
     setIsRunning(false);
   };
 
@@ -2824,7 +2888,46 @@ const PlinkoGame = ({ tokens, setTokens, minBet = 5, showNotification }) => {
         <div className="col-span-2">
           <div className="bg-black/40 p-6 rounded-xl border border-white/5">
             <div className="grid grid-cols-1 gap-4">
-              <div className="w-full h-64 bg-gradient-to-b from-black to-yellow-900/10 rounded-lg flex items-end justify-center pb-6">
+              <div ref={dropAreaRef} className="w-full h-64 bg-gradient-to-b from-black to-yellow-900/10 rounded-lg relative overflow-visible flex items-end justify-center pb-6">
+
+                {/* Peg layer (visual only) */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {Array.from({ length: rows }).map((_, r) => (
+                    Array.from({ length: rows + 1 }).map((__, c) => {
+                      const offset = (r % 2) * 0.5;
+                      const leftPercent = ((c + offset + 0.5) / (rows + 1)) * 100;
+                      const topPercent = ((r + 1) / (rows + 1)) * 86;
+                      return (
+                        <div key={`peg-${r}-${c}`} style={{ left: `${leftPercent}%`, top: `${topPercent}%` }} className="absolute w-3 h-3 rounded-full bg-white/80 shadow-md transform -translate-x-1/2 -translate-y-1/2" />
+                      );
+                    })
+                  ))}
+                </div>
+
+                {/* Active falling balls */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {activeBalls.map(ball => (
+                    <motion.div
+                      key={ball.id}
+                      initial={{ top: '-6%', left: `${ball.leftPercent}%` }}
+                      animate={{ top: ball.landed ? '74%' : '90%', left: `${ball.leftPercent}%` }}
+                      transition={{ duration: ball.duration, ease: 'easeInOut' }}
+                      className="w-5 h-5 rounded-full bg-yellow-400 shadow-lg -translate-x-1/2"
+                    />
+                  ))}
+
+                  {/* Landing particles */}
+                  {plinkoParticles.map(p => (
+                    <motion.div key={p.id} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: p.delay }} style={{ left: `${p.left}%`, top: `${p.top}%`, background: p.color }} className="absolute w-2 h-2 rounded-full" />
+                  ))}
+
+                  {/* Landing ripples */}
+                  {plinkoRipples.map(r => (
+                    <motion.div key={r.id} initial={{ scale: 0, opacity: 1 }} animate={{ scale: 1.6, opacity: 0 }} transition={{ duration: 0.6 }} style={{ left: `${r.left}%`, bottom: '14%' }} className="absolute w-10 h-10 rounded-full border-2 border-yellow-400/60 transform -translate-x-1/2 pointer-events-none" />
+                  ))}
+                </div>
+
+                {/* Multipliers bar (bottom) */}
                 <div className="w-full max-w-3xl" style={{ display: 'grid', gridTemplateColumns: `repeat(${rows+1}, 1fr)` }}>
                   {multipliers.map((m,i) => (
                     <div key={i} className="flex flex-col items-center justify-end gap-2">
@@ -2833,6 +2936,7 @@ const PlinkoGame = ({ tokens, setTokens, minBet = 5, showNotification }) => {
                     </div>
                   ))}
                 </div>
+
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-zinc-400">Client Seed: <input value={clientSeed} onChange={e=>setClientSeed(e.target.value)} className="bg-zinc-900 p-1 rounded text-sm ml-2" /></div>
