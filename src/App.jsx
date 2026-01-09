@@ -1051,7 +1051,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
               initial={isSpinning ? { y: -600 } : { y: 0 }}
               animate={isSpinning ? { y: [0, 600], rotate: [0, 180] } : { y: 0, scale: [1, 1.2, 1] }}
               transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
-              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_30px_rgba(0,255,255,0.6)]'}`}}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_30px_rgba(0,255,255,0.6)]'}`}
             >
               {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
             </motion.div>
@@ -1563,7 +1563,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
               initial={isSpinning ? { y: -600 } : { y: 0 }}
               animate={isSpinning ? { y: [0, 600], rotate: [0, -180] } : { y: 0, scale: [1, 1.25, 1] }}
               transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
-              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(255,215,0,0.7)]'}`}}
+              className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(255,215,0,0.7)]'}`}
             >
               {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
             </motion.div>
@@ -1622,7 +1622,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-8 bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(255,215,0,0.9)] border-4 border-white/50"
+            className="absolute -top-16 z-50 bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(255,215,0,0.9)] border-4 border-white/50"
           >
             {winMsg}
           </motion.div>
