@@ -12,10 +12,10 @@ import {
 // --- CONFIGURATION ---
 const INITIAL_TOKENS = 2500;
 const SITE_CONFIG = {
-  name: "LUXE PREMIER",
+  name: "LUXEBLACK",
   tagline: "The World's Most Refined Social Gaming Simulation",
-  description: "Experience the pinnacle of virtual gaming with Luxe Premier. Our platform offers high-performance RNG simulations designed for entertainment and strategic mastery in a zero-risk environment.",
-  disclaimer: "Luxe Premier is a strictly social simulation platform. Virtual tokens have no real-world value and cannot be exchanged for currency or prizes. Participation is intended for those 18+.",
+  description: "Experience the pinnacle of virtual gaming with LuxeBlack. Our platform offers high-performance RNG simulations designed for entertainment and strategic mastery in a zero-risk environment.",
+  disclaimer: "LuxeBlack is a strictly social simulation platform. Virtual tokens have no real-world value and cannot be exchanged for currency or prizes. Participation is intended for those 18+.",
 };
 
 const GAMES = [
@@ -57,6 +57,16 @@ const GAMES = [
     minBet: 25, 
     icon: <Sparkles className="text-cyan-400" size={32} />,
     guide: "ULTRA MEGA SLOTS! Triple matches pay up to 200x! Jackpot symbols trigger MEGA WIN celebrations!"
+  },
+  { 
+    id: 'luxe-mega-5', 
+    type: 'luxe-mega-5', 
+    name: 'LUXEBLACK MEGA 5', 
+    colors: 'from-black via-zinc-900 via-purple-950 to-black', 
+    symbols: ['💎', '⭐', '👑', '🎰', '💰', '🚀', '🎆', '💫', '🔥', '⚡'], 
+    minBet: 30, 
+    icon: <Crown className="text-yellow-400" size={32} />,
+    guide: "PREMIUM 5-COLUMN MEGA SLOTS! Match 3-5 symbols for massive wins up to 500x! Exclusive LuxeBlack experience!"
   },
   { 
     id: 'ocean-slots', 
@@ -308,7 +318,7 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
   );
 };
 
-// Enhanced Sound System with more satisfying effects
+// PROFESSIONAL ENHANCED SOUND SYSTEM - Ultra Polished & Addicting
 let audioContext = null;
 const getAudioContext = () => {
   if (!audioContext) {
@@ -320,106 +330,211 @@ const getAudioContext = () => {
   return audioContext;
 };
 
-const createSound = (frequency, duration, type = 'sine', volume = 0.3, detune = 0) => {
+// Create sound with reverb and multiple layers for depth
+const createSound = (frequency, duration, type = 'sine', volume = 0.3, detune = 0, reverb = false) => {
   try {
     const ctx = getAudioContext();
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
+    const masterGain = ctx.createGain();
     
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    if (reverb) {
+      // Add reverb effect using delay
+      const delay = ctx.createDelay();
+      const delayGain = ctx.createGain();
+      const feedbackGain = ctx.createGain();
+      
+      delay.delayTime.value = 0.1;
+      delayGain.gain.value = 0.3;
+      feedbackGain.gain.value = 0.2;
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(masterGain);
+      gainNode.connect(delay);
+      delay.connect(delayGain);
+      delayGain.connect(feedbackGain);
+      feedbackGain.connect(delay);
+      delayGain.connect(masterGain);
+    } else {
+      oscillator.connect(gainNode);
+      gainNode.connect(masterGain);
+    }
+    
+    masterGain.connect(ctx.destination);
     
     oscillator.frequency.value = frequency;
     oscillator.type = type;
     if (detune) oscillator.detune.value = detune;
-    gainNode.gain.setValueAtTime(volume, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
     
-    oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + duration);
+    // Smooth attack and release
+    const now = ctx.currentTime;
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(volume, now + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    
+    masterGain.gain.value = 0.8;
+    
+    oscillator.start(now);
+    oscillator.stop(now + duration);
   } catch (e) {
     // Silently fail if audio context not available
   }
 };
 
-const createChord = (frequencies, duration, type = 'sine', volume = 0.25) => {
+// Create rich, layered chord with harmonics
+const createChord = (frequencies, duration, type = 'sine', volume = 0.25, addHarmonics = false) => {
   frequencies.forEach((freq, i) => {
-    setTimeout(() => createSound(freq, duration, type, volume), i * 30);
+    setTimeout(() => {
+      createSound(freq, duration, type, volume);
+      if (addHarmonics) {
+        // Add harmonics for richness
+        setTimeout(() => createSound(freq * 2, duration * 0.6, type, volume * 0.4), 10);
+        setTimeout(() => createSound(freq * 3, duration * 0.4, type, volume * 0.2), 20);
+      }
+    }, i * 25);
   });
+};
+
+// Create satisfying click/pop sound
+const createClick = (frequency = 800, volume = 0.15) => {
+  createSound(frequency, 0.05, 'square', volume);
+  createSound(frequency * 1.5, 0.03, 'sine', volume * 0.6);
 };
 
 const playSpinSound = (theme = 'default') => {
   const ctx = getAudioContext();
+  // Add satisfying click at start
+  createClick(1000, 0.2);
+  
   if (theme === 'ocean') {
-    createSound(150, 0.08, 'sine', 0.15);
-    setTimeout(() => createSound(200, 0.08, 'sine', 0.15), 40);
-    setTimeout(() => createSound(250, 0.08, 'sine', 0.15), 80);
+    // Layered underwater sounds
+    createSound(150, 0.12, 'sine', 0.18, 0, true);
+    setTimeout(() => createSound(200, 0.12, 'sine', 0.18, 0, true), 50);
+    setTimeout(() => createSound(250, 0.12, 'sine', 0.18, 0, true), 100);
+    setTimeout(() => createSound(180, 0.08, 'sine', 0.12), 150);
   } else if (theme === 'cosmic') {
-    createSound(200, 0.1, 'sine', 0.2, -50);
-    setTimeout(() => createSound(300, 0.1, 'sine', 0.2, 50), 50);
+    // Spacey ethereal sounds
+    createSound(200, 0.15, 'sine', 0.22, -50, true);
+    setTimeout(() => createSound(300, 0.15, 'sine', 0.22, 50, true), 60);
+    setTimeout(() => createSound(400, 0.12, 'sine', 0.18, 0), 120);
   } else if (theme === 'egyptian') {
-    createSound(220, 0.12, 'sawtooth', 0.2);
-    setTimeout(() => createSound(330, 0.12, 'sawtooth', 0.2), 60);
+    // Rich ancient sounds
+    createSound(220, 0.14, 'sawtooth', 0.24);
+    setTimeout(() => createSound(330, 0.14, 'sawtooth', 0.24), 70);
+    setTimeout(() => createSound(440, 0.1, 'sawtooth', 0.2), 140);
   } else if (theme === 'cyber') {
-    createSound(300, 0.06, 'square', 0.25);
-    setTimeout(() => createSound(400, 0.06, 'square', 0.25), 30);
-    setTimeout(() => createSound(500, 0.06, 'square', 0.25), 60);
+    // Sharp digital sounds
+    createClick(1200, 0.25);
+    createSound(300, 0.08, 'square', 0.28);
+    setTimeout(() => createClick(1500, 0.25), 30);
+    setTimeout(() => createSound(400, 0.08, 'square', 0.28), 40);
+    setTimeout(() => createClick(1800, 0.25), 60);
+    setTimeout(() => createSound(500, 0.08, 'square', 0.28), 70);
   } else if (theme === 'forest') {
-    createSound(180, 0.1, 'sine', 0.18);
-    setTimeout(() => createSound(240, 0.1, 'sine', 0.18), 50);
+    // Natural organic sounds
+    createSound(180, 0.13, 'sine', 0.2, 0, true);
+    setTimeout(() => createSound(240, 0.13, 'sine', 0.2, 0, true), 60);
+    setTimeout(() => createSound(300, 0.1, 'sine', 0.16), 120);
   } else {
-    // Default
-    createSound(200, 0.1, 'sawtooth', 0.2);
-    setTimeout(() => createSound(300, 0.1, 'sawtooth', 0.2), 50);
-    setTimeout(() => createSound(400, 0.1, 'sawtooth', 0.2), 100);
+    // Default - Premium casino sound
+    createClick(900, 0.22);
+    createSound(200, 0.12, 'sawtooth', 0.24);
+    setTimeout(() => createClick(1100, 0.2), 50);
+    setTimeout(() => createSound(300, 0.12, 'sawtooth', 0.24), 60);
+    setTimeout(() => createClick(1300, 0.18), 100);
+    setTimeout(() => createSound(400, 0.12, 'sawtooth', 0.24), 110);
+    // Add subtle low end
+    setTimeout(() => createSound(100, 0.15, 'sine', 0.12), 30);
   }
 };
 
 const playWinSound = (multiplier, theme = 'default') => {
+  // Add satisfying impact sound first
+  createClick(600, 0.25);
+  
   if (multiplier >= 200) {
-    // Ultra mega win - epic chord progression
-    createChord([261.63, 329.63, 392.00, 523.25], 0.4, 'sine', 0.35);
-    setTimeout(() => createChord([293.66, 369.99, 440.00, 587.33], 0.4, 'sine', 0.35), 200);
-    setTimeout(() => createChord([329.63, 415.30, 493.88, 659.25], 0.4, 'sine', 0.4), 400);
+    // ULTRA MEGA WIN - Epic cinematic progression with harmonics
+    createChord([261.63, 329.63, 392.00, 523.25], 0.5, 'sine', 0.4, true);
+    setTimeout(() => {
+      createClick(700, 0.3);
+      createChord([293.66, 369.99, 440.00, 587.33], 0.5, 'sine', 0.4, true);
+    }, 250);
+    setTimeout(() => {
+      createClick(800, 0.35);
+      createChord([329.63, 415.30, 493.88, 659.25], 0.6, 'sine', 0.45, true);
+    }, 500);
+    // Add triumphant ending
+    setTimeout(() => {
+      createChord([392.00, 493.88, 587.33, 783.99], 0.4, 'sine', 0.5, true);
+    }, 800);
   } else if (multiplier >= 100) {
-    // Mega win - satisfying major chord
-    createChord([261.63, 329.63, 392.00], 0.3, 'sine', 0.3);
-    setTimeout(() => createChord([329.63, 415.30, 493.88], 0.3, 'sine', 0.3), 150);
-    setTimeout(() => createChord([392.00, 493.88, 587.33], 0.3, 'sine', 0.35), 300);
+    // MEGA WIN - Rich satisfying progression
+    createChord([261.63, 329.63, 392.00], 0.35, 'sine', 0.35, true);
+    setTimeout(() => {
+      createClick(650, 0.28);
+      createChord([329.63, 415.30, 493.88], 0.35, 'sine', 0.35, true);
+    }, 180);
+    setTimeout(() => {
+      createClick(750, 0.3);
+      createChord([392.00, 493.88, 587.33], 0.4, 'sine', 0.4, true);
+    }, 360);
   } else if (multiplier >= 50) {
-    // Big win - pleasant chord
-    createChord([261.63, 329.63, 392.00], 0.25, 'sine', 0.28);
-    setTimeout(() => createChord([329.63, 415.30, 493.88], 0.25, 'sine', 0.28), 120);
+    // BIG WIN - Pleasant rich chord
+    createChord([261.63, 329.63, 392.00], 0.3, 'sine', 0.32, true);
+    setTimeout(() => {
+      createClick(600, 0.25);
+      createChord([329.63, 415.30, 493.88], 0.3, 'sine', 0.32, true);
+    }, 150);
   } else if (multiplier >= 10) {
-    // Medium win
-    createSound(523.25, 0.2, 'sine', 0.25);
-    setTimeout(() => createSound(659.25, 0.2, 'sine', 0.25), 100);
+    // MEDIUM WIN - Satisfying two-tone
+    createSound(523.25, 0.25, 'sine', 0.28, 0, true);
+    setTimeout(() => {
+      createClick(550, 0.2);
+      createSound(659.25, 0.25, 'sine', 0.28, 0, true);
+    }, 120);
+    setTimeout(() => createSound(783.99, 0.2, 'sine', 0.24), 240);
   } else {
-    // Small win
-    createSound(523.25, 0.15, 'sine', 0.2);
-    setTimeout(() => createSound(659.25, 0.15, 'sine', 0.2), 80);
+    // SMALL WIN - Quick satisfying pop
+    createSound(523.25, 0.18, 'sine', 0.24, 0, true);
+    setTimeout(() => {
+      createClick(500, 0.18);
+      createSound(659.25, 0.18, 'sine', 0.24, 0, true);
+    }, 100);
   }
 };
 
 const playReelStopSound = (theme = 'default') => {
+  // Satisfying click-pop on reel stop
   if (theme === 'ocean') {
-    createSound(120, 0.06, 'sine', 0.12);
+    createClick(400, 0.15);
+    createSound(120, 0.08, 'sine', 0.14, 0, true);
   } else if (theme === 'cyber') {
-    createSound(200, 0.04, 'square', 0.2);
+    createClick(600, 0.22);
+    createSound(200, 0.06, 'square', 0.24);
   } else {
-    createSound(150, 0.05, 'square', 0.15);
+    createClick(500, 0.18);
+    createSound(150, 0.07, 'square', 0.18);
+    // Add subtle harmonic
+    setTimeout(() => createSound(300, 0.05, 'sine', 0.1), 20);
   }
 };
 
 const playBonusSound = () => {
-  // Epic bonus round sound
-  createChord([261.63, 329.63, 392.00, 523.25], 0.5, 'sine', 0.4);
+  // EPIC BONUS ROUND - Cinematic fanfare
+  createClick(800, 0.3);
+  createChord([261.63, 329.63, 392.00, 523.25], 0.6, 'sine', 0.45, true);
   setTimeout(() => {
-    createChord([329.63, 415.30, 493.88, 659.25], 0.5, 'sine', 0.4);
-  }, 300);
+    createClick(900, 0.35);
+    createChord([329.63, 415.30, 493.88, 659.25], 0.6, 'sine', 0.45, true);
+  }, 350);
   setTimeout(() => {
-    createChord([392.00, 493.88, 587.33, 783.99], 0.5, 'sine', 0.45);
-  }, 600);
+    createClick(1000, 0.4);
+    createChord([392.00, 493.88, 587.33, 783.99], 0.7, 'sine', 0.5, true);
+  }, 700);
+  // Triumphant ending
+  setTimeout(() => {
+    createChord([523.25, 659.25, 783.99, 1046.50], 0.5, 'sine', 0.55, true);
+  }, 1100);
 };
 
 // Confetti particle component
@@ -610,17 +725,18 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
           >
             <motion.div
               key={isSpinning ? `spin-${i}-${Date.now()}` : `stop-${i}`}
-              initial={isSpinning ? { y: -600, rotate: 0 } : { y: 0, scale: 1 }}
+              initial={isSpinning ? { y: -800, rotate: 0 } : { y: 0, scale: 1 }}
               animate={isSpinning ? {
-                y: [0, 600],
-                rotate: [0, 360]
+                y: [0, 800],
+                rotate: [0, 720],
+                scale: [1, 1.1, 1]
               } : {
                 y: 0,
                 scale: [1, 1.3, 1],
                 rotate: [0, 10, -10, 0]
               }}
               transition={isSpinning ? {
-                duration: 0.08,
+                duration: 0.06,
                 repeat: Infinity,
                 ease: "linear"
               } : {
@@ -629,11 +745,14 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
               }}
               className={`text-7xl md:text-9xl ${
                 isSpinning 
-                  ? 'blur-md opacity-30' 
+                  ? 'opacity-40' 
                   : 'drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter brightness-110'
               }`}
               style={{
-                textShadow: isSpinning ? 'none' : '0 0 20px currentColor, 0 0 40px currentColor'
+                filter: isSpinning ? 'blur(8px) brightness(1.5)' : 'none',
+                textShadow: isSpinning ? 'none' : '0 0 20px currentColor, 0 0 40px currentColor',
+                willChange: isSpinning ? 'transform' : 'auto',
+                transform: isSpinning ? 'translateZ(0)' : 'none'
               }}
             >
               {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
@@ -2013,6 +2132,407 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
   );
 };
 
+// LUXEBLACK MEGA 5-COLUMN SLOT - Premium Professional Experience
+const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2], symbols[3], symbols[4]]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [winMsg, setWinMsg] = useState('');
+  const [bet, setBet] = useState(initialMinBet);
+  const [multiplier, setMultiplier] = useState(0);
+  const [inBonus, setInBonus] = useState(false);
+  const [bonusSpins, setBonusSpins] = useState(0);
+  const [screenShake, setScreenShake] = useState(false);
+  const [glowEffect, setGlowEffect] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [particles, setParticles] = useState([]);
+  const containerRef = useRef(null);
+
+  const generateConfetti = () => {
+    const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7'];
+    const newParticles = [];
+    for (let i = 0; i < 150; i++) {
+      newParticles.push({
+        id: i,
+        x: Math.random() * (containerRef.current?.offsetWidth || 1200),
+        y: Math.random() * (containerRef.current?.offsetHeight || 800),
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 0.8
+      });
+    }
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), 4000);
+  };
+
+  const spin = () => {
+    if (isSpinning || tokens < bet) return;
+    setIsSpinning(true);
+    setWinMsg('');
+    setMultiplier(0);
+    setGlowEffect(false);
+    setTokens(t => t - bet);
+    playSpinSound('default');
+    
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+    
+    // Staggered stops for dramatic effect
+    [1000, 1800, 2600, 3400, 4200].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { 
+          const n = [...prev]; 
+          n[i] = results[i]; 
+          return n; 
+        });
+        playReelStopSound('default');
+        if (i === 4) {
+          setTimeout(() => finalize(results), 500);
+        }
+      }, d);
+    });
+  };
+
+  const finalize = (res) => {
+    setIsSpinning(false);
+    let mult = 0;
+    let message = '';
+    let isMegaWin = false;
+    let triggerBonus = false;
+
+    // Check for 5-of-a-kind
+    if (res[0] === res[1] && res[1] === res[2] && res[2] === res[3] && res[3] === res[4]) {
+      if (res[0] === '💎' || res[0] === '👑' || res[0] === '⭐') {
+        mult = 500;
+        message = `💎💎💎 LUXEBLACK MEGA JACKPOT!!! 💎💎💎 +${(bet * mult).toLocaleString()}`;
+        isMegaWin = true;
+        triggerBonus = true;
+      } else if (res[0] === '🎰' || res[0] === '💰') {
+        mult = 300;
+        message = `🎰🎰🎰 ULTRA JACKPOT!!! 🎰🎰🎰 +${(bet * mult).toLocaleString()}`;
+        isMegaWin = true;
+        triggerBonus = Math.random() < 0.4;
+      } else {
+        mult = 200;
+        message = `🔥🔥🔥 MEGA WIN!!! 🔥🔥🔥 +${(bet * mult).toLocaleString()}`;
+        isMegaWin = true;
+      }
+      setTokens(t => t + bet * mult);
+    }
+    // Check for 4-of-a-kind
+    else if ((res[0] === res[1] && res[1] === res[2] && res[2] === res[3]) ||
+             (res[1] === res[2] && res[2] === res[3] && res[3] === res[4])) {
+      mult = 100;
+      message = `✨✨✨ QUAD MATCH! ✨✨✨ +${(bet * mult).toLocaleString()}`;
+      setTokens(t => t + bet * mult);
+      isMegaWin = true;
+    }
+    // Check for 3-of-a-kind
+    else if ((res[0] === res[1] && res[1] === res[2]) ||
+             (res[1] === res[2] && res[2] === res[3]) ||
+             (res[2] === res[3] && res[3] === res[4])) {
+      mult = 50;
+      message = `🎉 TRIPLE MATCH! 🎉 +${(bet * mult).toLocaleString()}`;
+      setTokens(t => t + bet * mult);
+    }
+    // Check for 2 pairs
+    else {
+      const counts = {};
+      res.forEach(s => counts[s] = (counts[s] || 0) + 1);
+      const pairs = Object.values(counts).filter(c => c >= 2).length;
+      if (pairs >= 2) {
+        mult = 15;
+        message = `✨ DOUBLE PAIR! ✨ +${(bet * mult).toLocaleString()}`;
+        setTokens(t => t + bet * mult);
+      } else if (pairs === 1) {
+        mult = 5;
+        message = `💫 PAIR WIN! 💫 +${(bet * mult).toLocaleString()}`;
+        setTokens(t => t + bet * mult);
+      }
+    }
+
+    if (mult > 0) {
+      setMultiplier(mult);
+      setWinMsg(message);
+      playWinSound(mult, 'default');
+      
+      if (isMegaWin) {
+        setShowConfetti(true);
+        setScreenShake(true);
+        setGlowEffect(true);
+        generateConfetti();
+        setTimeout(() => {
+          setScreenShake(false);
+          setGlowEffect(false);
+        }, 2500);
+        setTimeout(() => setShowConfetti(false), 4000);
+      }
+    }
+
+    if (triggerBonus) {
+      setTimeout(() => startBonusRound(), 2000);
+    }
+  };
+
+  const startBonusRound = () => {
+    playBonusSound();
+    setInBonus(true);
+    setBonusSpins(10);
+    setWinMsg('🎁 LUXEBLACK BONUS ROUND ACTIVATED! 🎁');
+  };
+
+  const bonusSpin = () => {
+    if (bonusSpins <= 0) {
+      setInBonus(false);
+      return;
+    }
+    setIsSpinning(true);
+    setWinMsg('');
+    setBonusSpins(prev => prev - 1);
+    playSpinSound('default');
+
+    const results = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+
+    [800, 1500, 2200, 2900, 3600].forEach((d, i) => {
+      setTimeout(() => {
+        setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
+        if (i === 4) {
+          setTimeout(() => {
+            setIsSpinning(false);
+            const bonusMult = 25;
+            setTokens(t => t + bet * bonusMult);
+            setWinMsg(`🎁 BONUS WIN! +${(bet * bonusMult).toLocaleString()} (${bonusSpins - 1} left)`);
+            playWinSound(bonusMult, 'default');
+          }, 400);
+        }
+      }, d);
+    });
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      className={`flex flex-col items-center gap-10 p-12 bg-gradient-to-br from-black via-zinc-900 via-purple-900/20 to-black rounded-[4rem] border-2 border-yellow-500/30 relative shadow-[0_0_300px_rgba(255,215,0,0.3)] overflow-hidden ${
+        screenShake ? 'animate-pulse' : ''
+      }`}
+      style={{
+        boxShadow: glowEffect ? '0 0 300px rgba(255,215,0,0.8), 0 0 600px rgba(255,20,147,0.6), inset 0 0 200px rgba(255,215,0,0.2)' : undefined,
+        transition: 'box-shadow 0.3s ease'
+      }}
+    >
+      {/* LuxeBlack Branding */}
+      <div className="absolute top-4 left-4 right-4 flex justify-center z-20">
+        <motion.div
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 text-black px-8 py-3 rounded-full font-black text-xl italic tracking-tighter shadow-[0_0_30px_rgba(255,215,0,0.6)]"
+        >
+          LUXEBLACK
+        </motion.div>
+      </div>
+
+      {/* Animated background effects */}
+      {glowEffect && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ 
+            opacity: [0, 1, 0],
+            scale: [1, 1.3, 1]
+          }}
+          transition={{ duration: 2.5, repeat: Infinity }}
+          className="absolute inset-0 bg-gradient-to-r from-yellow-500/30 via-pink-500/30 to-cyan-500/30 pointer-events-none"
+        />
+      )}
+
+      {/* Confetti particles */}
+      <AnimatePresence>
+        {particles.map(particle => (
+          <ConfettiParticle key={particle.id} {...particle} />
+        ))}
+      </AnimatePresence>
+
+      {/* 5-Column Reels with Premium Motion Blur */}
+      <div className="relative flex gap-3 md:gap-6 bg-black/70 p-8 rounded-[2.5rem] border-2 border-yellow-500/40 backdrop-blur-2xl mt-16">
+        {reels.map((symbol, i) => (
+          <motion.div
+            key={`${symbol}-${i}-${isSpinning}`}
+            className="relative w-24 h-56 md:w-32 md:h-72 bg-gradient-to-b from-zinc-900 via-black to-zinc-900 rounded-[1.5rem] overflow-hidden border-2 border-yellow-500/30 flex items-center justify-center"
+            animate={isSpinning ? {
+              scale: [1, 1.08, 1],
+              boxShadow: [
+                '0 0 25px rgba(255,215,0,0.4)',
+                '0 0 60px rgba(255,215,0,0.8)',
+                '0 0 25px rgba(255,215,0,0.4)'
+              ]
+            } : {}}
+            transition={{ duration: 0.08, repeat: isSpinning ? Infinity : 0 }}
+          >
+            {/* Motion blur reel content */}
+            <motion.div
+              key={isSpinning ? `spin-${i}-${Date.now()}` : `stop-${i}`}
+              initial={isSpinning ? { y: -1000 } : { y: 0 }}
+              animate={isSpinning ? {
+                y: [0, 1000],
+                rotate: [0, 1080]
+              } : {
+                y: 0,
+                scale: [1, 1.4, 1],
+                rotate: [0, 15, -15, 0]
+              }}
+              transition={isSpinning ? {
+                duration: 0.05,
+                repeat: Infinity,
+                ease: "linear"
+              } : {
+                duration: 0.6,
+                ease: "backOut"
+              }}
+              className={`text-6xl md:text-8xl ${
+                isSpinning 
+                  ? 'opacity-50' 
+                  : 'drop-shadow-[0_0_40px_rgba(255,215,0,0.6)] filter brightness-120'
+              }`}
+              style={{
+                filter: isSpinning ? 'blur(10px) brightness(2) saturate(1.5)' : 'none',
+                textShadow: isSpinning ? 'none' : '0 0 30px currentColor, 0 0 60px currentColor, 0 0 90px currentColor',
+                willChange: isSpinning ? 'transform' : 'auto',
+                transform: isSpinning ? 'translateZ(0)' : 'none',
+                backfaceVisibility: 'hidden',
+                perspective: '1000px'
+              }}
+            >
+              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+            </motion.div>
+            
+            {/* Speed lines effect during spin */}
+            {isSpinning && (
+              <motion.div
+                animate={{ y: ['-100%', '200%'] }}
+                transition={{ duration: 0.1, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to bottom, transparent 0%, rgba(255,215,0,0.3) 50%, transparent 100%)',
+                  height: '30%'
+                }}
+              />
+            )}
+            
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60 pointer-events-none" />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Multiplier display */}
+      {multiplier > 0 && (
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: [0, 1.8, 1], rotate: 0 }}
+          exit={{ scale: 0, rotate: 180 }}
+          className="absolute top-32 text-9xl md:text-[12rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400"
+          style={{
+            textShadow: '0 0 50px rgba(255,215,0,1), 0 0 100px rgba(255,215,0,0.8)',
+            WebkitTextStroke: '3px rgba(255,215,0,0.8)',
+            filter: 'drop-shadow(0 0 30px rgba(255,215,0,0.9))'
+          }}
+        >
+          {multiplier}x
+        </motion.div>
+      )}
+
+      {inBonus && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          className="absolute top-20 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 text-black px-10 py-5 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(255,215,0,1)]"
+        >
+          🎁 LUXEBLACK BONUS: {bonusSpins} SPINS 🎁
+        </motion.div>
+      )}
+
+      <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={isSpinning} />
+      
+      <button 
+        onClick={inBonus ? bonusSpin : spin} 
+        disabled={isSpinning} 
+        className="group relative w-full h-36 rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all"
+      >
+        <motion.div
+          animate={isSpinning ? {
+            background: [
+              'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
+              'linear-gradient(90deg, #ff8c00, #ffd700, #ff8c00)'
+            ]
+          } : {}}
+          transition={{ duration: 0.2, repeat: isSpinning ? Infinity : 0 }}
+          className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 group-hover:from-yellow-300 group-hover:via-amber-300 group-hover:to-yellow-300"
+        />
+        <span className="relative z-10 text-black font-black text-6xl italic uppercase tracking-[0.3em] flex items-center justify-center gap-4">
+          {inBonus ? (
+            <>
+              <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}>
+                🎁
+              </motion.span>
+              BONUS SPIN
+              <motion.span animate={{ rotate: -360 }} transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}>
+                🎁
+              </motion.span>
+            </>
+          ) : isSpinning ? (
+            <>
+              <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.3, repeat: Infinity, ease: "linear" }}>
+                ⚡
+              </motion.span>
+              SPINNING...
+              <motion.span animate={{ rotate: -360 }} transition={{ duration: 0.3, repeat: Infinity, ease: "linear" }}>
+                ⚡
+              </motion.span>
+            </>
+          ) : (
+            '🎰 LUXEBLACK SPIN 🎰'
+          )}
+        </span>
+      </button>
+
+      {/* Win message */}
+      <AnimatePresence>
+        {winMsg && (
+          <motion.div
+            initial={{ scale: 0, rotate: -180, opacity: 0 }}
+            animate={{ 
+              scale: [0, 1.3, 1],
+              rotate: [0, 15, -15, 0],
+              opacity: 1,
+              y: [100, 0]
+            }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute -top-12 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 text-black px-20 py-8 rounded-full font-black text-4xl md:text-5xl shadow-[0_0_80px_rgba(255,215,0,1)] border-4 border-white/60"
+            style={{
+              textShadow: '3px 3px 6px rgba(0,0,0,0.5)',
+            }}
+          >
+            <motion.div
+              animate={{ scale: [1, 1.15, 1] }}
+              transition={{ duration: 0.6, repeat: Infinity }}
+            >
+              {winMsg}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const BlackjackTable = ({ initialMinBet, tokens, setTokens }) => {
   const [deck, setDeck] = useState(createDeck());
   const [playerHand, setPlayerHand] = useState([]);
@@ -2232,8 +2752,8 @@ export default function App() {
           <div onClick={() => navigateTo('landing')} className="flex items-center gap-3 cursor-pointer group">
             <div className="bg-white p-2 rounded-xl group-hover:scale-110 transition-transform"><Crown size={24} className="text-black" /></div>
             <div className="flex flex-col leading-none">
-              <span className="text-2xl font-black italic tracking-tighter">LUXE</span>
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-500">Premier Studio</span>
+              <span className="text-2xl font-black italic tracking-tighter">LUXEBLACK</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-500">Gaming Studio</span>
             </div>
           </div>
           
@@ -2354,6 +2874,7 @@ export default function App() {
               {activeGame.type === 'pharaoh-slots' && <PharaohSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
               {activeGame.type === 'cyber-slots' && <CyberSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
               {activeGame.type === 'forest-slots' && <ForestSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
+              {activeGame.type === 'luxe-mega-5' && <LuxeMega5Slot symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
               {activeGame.type === 'roulette' && <RouletteTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
               <div className="w-full max-w-3xl bg-zinc-900/50 border border-white/5 p-12 rounded-[3rem] flex flex-col md:flex-row gap-10">
                 <div className="w-20 h-20 bg-white/5 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-white/5"><Info className="text-zinc-400" size={32} /></div>
@@ -2371,11 +2892,11 @@ export default function App() {
                 title="Responsible Simulation" 
                 onBack={() => navigateTo('landing')}
                 content={[
-                    "Entertainment should remain balanced and sophisticated. Luxe Premier encourages all guests to practice mindfulness during their stay.",
+                    "Entertainment should remain balanced and sophisticated. LuxeBlack encourages all guests to practice mindfulness during their stay.",
                     "While our platform involves no real money, the mechanics simulate real-world probability. We advise guests to view this strictly as a recreational strategy simulation.",
                     "Set time limits for your virtual sessions. If you find yourself spending excessive time in the simulation, we recommend taking an extended break.",
-                    "Luxe Premier provides tools for token reset and session termination. We advocate for a healthy, social-first approach to all virtual floor games.",
-                    "Remember: The objective of Luxe Premier is the appreciation of probability and refined social interaction, not financial gain."
+                    "LuxeBlack provides tools for token reset and session termination. We advocate for a healthy, social-first approach to all virtual floor games.",
+                    "Remember: The objective of LuxeBlack is the appreciation of probability and refined social interaction, not financial gain."
                 ]}
             />
           )}
@@ -2388,7 +2909,7 @@ export default function App() {
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <div className="bg-white p-2 rounded-lg"><Crown size={20} className="text-black" /></div>
-              <span className="text-xl font-black italic tracking-tighter uppercase">LUXE PREMIER</span>
+              <span className="text-xl font-black italic tracking-tighter uppercase">LUXEBLACK</span>
             </div>
             <p className="text-zinc-500 text-sm leading-relaxed">{SITE_CONFIG.description}</p>
           </div>
@@ -2411,12 +2932,12 @@ export default function App() {
           <div className="space-y-6">
             <h5 className="font-black uppercase text-xs tracking-widest flex items-center gap-2"><Scale size={14}/> Compliance</h5>
             <p className="text-zinc-500 text-[10px] font-black uppercase leading-loose tracking-widest">
-              LUXE PREMIER IS FOR ENTERTAINMENT PURPOSES ONLY. NO REAL MONEY WAGERING. SOCIAL SIMULATION CERTIFIED 2024.
+              LUXEBLACK IS FOR ENTERTAINMENT PURPOSES ONLY. NO REAL MONEY WAGERING. SOCIAL SIMULATION CERTIFIED 2024.
             </p>
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-10 flex flex-col md:flex-row justify-between items-center gap-4 text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
-          <span>© 2024 LUXE PREMIER GAMING STUDIO. ALL RIGHTS RESERVED.</span>
+          <span>© 2024 LUXEBLACK GAMING STUDIO. ALL RIGHTS RESERVED.</span>
           <div className="flex gap-6">
             <span>Server: 0xLXP-ALPHA</span>
             <span className="flex items-center gap-1">Ad Transparency <ExternalLink size={10} /></span>
