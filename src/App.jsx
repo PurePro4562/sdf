@@ -19,6 +19,7 @@ const SITE_CONFIG = {
 };
 
 const GAMES = [
+  { id: 'plinko', type: 'plinko', name: 'Plinko', colors: 'from-yellow-900 via-amber-900 to-orange-900', minBet: 5, icon: <CircleDot className="text-yellow-400" size={32} />, guide: "Plinko is a Galton-board style drop—adjust rows and risk. Edge bins can pay big; center pays small. 99% RTP with provably-fair verification." },
   { 
     id: 'blackjack', 
     type: 'blackjack', 
@@ -271,7 +272,7 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens }) => {
   );
 };
 
-const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
   const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
@@ -292,15 +293,21 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
   const finalize = (res) => {
     setIsSpinning(false);
     let mult = 0;
+    let message = '';
     if (res[0] === res[1] && res[1] === res[2]) {
       mult = (res[0] === '7️⃣' || res[0] === '🔥' || res[0] === '💎') ? 50 : 25;
-      setTokens(t => t + bet * mult); setWinMsg(`PREMIER JACKPOT! +${(bet * mult).toLocaleString()}`);
+      setTokens(t => t + bet * mult);
+      message = `PREMIER JACKPOT! +${(bet * mult).toLocaleString()}`;
+      setWinMsg(message);
     } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
       mult = 2;
-      setTokens(t => t + bet * mult); setWinMsg('MATCH WIN! +2x');
+      setTokens(t => t + bet * mult);
+      message = 'MATCH WIN! +2x';
+      setWinMsg(message);
     }
     if (mult > 0) {
       playWinSound(mult, 'default');
+      if (typeof showNotification === 'function') showNotification(message || `WIN +${(bet * mult).toLocaleString()}`);
     }
   };
   return (
@@ -2678,7 +2685,188 @@ const LegalPage = ({ title, content, onBack }) => (
 
 // --- MAIN APP COMPONENT ---
 
+// ========== Plinko Game (provably fair, adjustable risk) ==========
+const PlinkoGame = ({ tokens, setTokens, minBet = 5, showNotification }) => {
+  const [bet, setBet] = useState(minBet);
+  const [rows, setRows] = useState(12);
+  const [balls, setBalls] = useState(1);
+  const [risk, setRisk] = useState('medium'); // low, medium, high
+  const [serverSeed, setServerSeed] = useState(() => crypto.getRandomValues(new Uint32Array(4)).join('-'));
+  const [serverHash, setServerHash] = useState('');
+  const [clientSeed, setClientSeed] = useState('user-seed');
+  const [isRunning, setIsRunning] = useState(false);
+  const [lastResult, setLastResult] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const h = await sha256Hex(serverSeed);
+      setServerHash(h);
+    })();
+  }, [serverSeed]);
+
+  const sha256Hex = async (str) => {
+    if (!window.crypto?.subtle) {
+      let h = 0; for (let i=0;i<str.length;i++) h = (h<<5)-h+str.charCodeAt(i);
+      return (h >>> 0).toString(16).padStart(8,'0');
+    }
+    const enc = new TextEncoder().encode(str);
+    const hash = await window.crypto.subtle.digest('SHA-256', enc);
+    const arr = Array.from(new Uint8Array(hash));
+    return arr.map(b => b.toString(16).padStart(2,'0')).join('');
+  };
+
+  const randomFromSeed = async (s, c, nonce) => {
+    const data = `${s}:${c}:${nonce}`;
+    const h = await sha256Hex(data);
+    const v = parseInt(h.slice(0,8), 16);
+    return (v >>> 0) / 0xffffffff;
+  };
+
+  const binomialProbs = (n) => {
+    const probs = []; let sum=0;
+    for (let k=0;k<=n;k++){
+      let c = 1;
+      for (let i=0;i<k;i++) c = (c * (n - i)) / (i + 1);
+      const p = c * Math.pow(0.5, n);
+      probs.push(p); sum += p;
+    }
+    return probs.map(p => p/sum);
+  };
+
+  const computeMultipliers = (n, desiredRTP=0.99, riskLevel='medium') => {
+    const probs = binomialProbs(n);
+    const riskFactor = riskLevel === 'low' ? 0.6 : riskLevel === 'high' ? 1.6 : 1.0;
+    let raw = probs.map(p => Math.min(1000, (1 / Math.max(p, 1e-9)) * 0.02 * riskFactor));
+    const expectation = raw.reduce((s,m,i) => s + m * probs[i], 0);
+    const scale = desiredRTP / Math.max(expectation, 1e-6);
+    let scaled = raw.map(m => Math.max(1, Math.min(1000, Math.round(m * scale))));
+    return scaled;
+  };
+
+  const multipliers = computeMultipliers(rows, 0.99, risk);
+
+  const doDrop = async () => {
+    if (isRunning || tokens < bet) return;
+    setIsRunning(true);
+    setTokens(t => t - bet);
+    let totalWin = 0;
+    let nonce = 0;
+    for (let b = 0; b < balls; b++) {
+      let rights = 0;
+      for (let r = 0; r < rows; r++) {
+        const rnum = await randomFromSeed(serverSeed, clientSeed, nonce++);
+        if (rnum > 0.5) rights++;
+      }
+      const binIndex = rights;
+      const mult = multipliers[binIndex] || 1;
+      const win = bet * mult;
+      totalWin += win;
+      setLastResult({ binIndex, mult, win });
+      playReelStopSound('default');
+      await new Promise(res => setTimeout(res, 200 + (30 * rows)));
+    }
+    if (totalWin > 0) {
+      setTokens(t => t + totalWin);
+      showNotification(`PLINKO WIN! +${totalWin.toLocaleString()} (${balls} ball${balls>1?'s':''})`);
+      playWinSound(Math.max(1, Math.round((totalWin / bet) || 1)),'default');
+    } else {
+      showNotification('NO LUCK — TRY AGAIN');
+    }
+    setIsRunning(false);
+  };
+
+  const refreshServerSeed = () => {
+    setServerSeed(crypto.getRandomValues(new Uint32Array(4)).join('-'));
+  };
+
+  return (
+    <div className="w-full max-w-4xl p-12 bg-gradient-to-br from-yellow-900/10 to-black/20 rounded-[2rem] border border-white/5 relative">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-2xl font-black">Plinko</h3>
+          <p className="text-zinc-400 text-sm italic">Drop balls through a peg grid — adjustable rows and risk. Provably fair server seed shown before play.</p>
+        </div>
+        <div className="text-right text-sm">
+          <div className="text-zinc-500">Server Hash (reveal prior to play):</div>
+          <div className="font-mono text-xs text-white/80 truncate max-w-[360px]">{serverHash}</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-4">
+          <label className="block text-xs uppercase text-zinc-500 font-black">Bet</label>
+          <div className="flex items-center gap-3">
+            <input type="number" value={bet} onChange={e => setBet(Math.max(1, Number(e.target.value)||minBet))} className="w-32 bg-zinc-900 p-3 rounded-full text-right" />
+            <button onClick={() => setBet(minBet)} className="px-4 py-3 bg-white/5 rounded-full">Min</button>
+            <button onClick={() => setBet(Math.min(tokens, bet*2))} className="px-4 py-3 bg-white/5 rounded-full">x2</button>
+          </div>
+
+          <label className="block text-xs uppercase text-zinc-500 font-black">Rows</label>
+          <input type="range" min={8} max={16} value={rows} onChange={e => setRows(Number(e.target.value))} />
+          <div className="text-sm text-zinc-400">{rows} rows</div>
+
+          <label className="block text-xs uppercase text-zinc-500 font-black mt-4">Risk</label>
+          <div className="flex gap-2">
+            {['low','medium','high'].map(r => (
+              <button key={r} onClick={() => setRisk(r)} className={`px-3 py-2 rounded-full font-black ${risk===r?'bg-white text-black':'bg-white/5'}`}>{r}</button>
+            ))}
+          </div>
+
+          <label className="block text-xs uppercase text-zinc-500 font-black mt-4">Balls</label>
+          <div className="flex items-center gap-2"><input type="number" value={balls} onChange={e => setBalls(Math.max(1, Math.min(10, Number(e.target.value)||1)))} className="w-20 bg-zinc-900 p-3 rounded-full" /></div>
+
+          <div className="space-y-2 mt-6">
+            <button onClick={doDrop} disabled={isRunning || tokens < bet} className="w-full py-4 bg-yellow-400 text-black font-black rounded-3xl shadow-xl">DROP</button>
+            <button onClick={refreshServerSeed} className="w-full py-3 bg-white/5 rounded-3xl">Refresh Server Seed</button>
+          </div>
+        </div>
+
+        <div className="col-span-2">
+          <div className="bg-black/40 p-6 rounded-xl border border-white/5">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="w-full h-64 bg-gradient-to-b from-black to-yellow-900/10 rounded-lg flex items-end justify-center pb-6">
+                <div className="w-full max-w-3xl" style={{ display: 'grid', gridTemplateColumns: `repeat(${rows+1}, 1fr)` }}>
+                  {multipliers.map((m,i) => (
+                    <div key={i} className="flex flex-col items-center justify-end gap-2">
+                      <div className="w-full h-12 flex items-end justify-center"><div className="text-sm font-black text-yellow-300">{m}x</div></div>
+                      <div className="w-full h-4 bg-white/5 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-zinc-400">Client Seed: <input value={clientSeed} onChange={e=>setClientSeed(e.target.value)} className="bg-zinc-900 p-1 rounded text-sm ml-2" /></div>
+                <div className="text-zinc-400">Last: {lastResult ? `${lastResult.win.toLocaleString()} (${lastResult.mult}x)` : '-'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
+  // Global notification state (fixed, always visible)
+  const [notification, setNotification] = useState(null);
+  const notifTimerRef = useRef(null);
+  const showNotification = (msg, { duration = 3500, variant = 'success' } = {}) => {
+    setNotification({ msg, variant });
+    if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
+    notifTimerRef.current = setTimeout(() => setNotification(null), duration);
+  };
+
+  const GlobalNotification = ({ notification }) => {
+    if (!notification) return null;
+    return (
+      <div className="fixed left-1/2 -translate-x-1/2 top-8 z-[9999] pointer-events-none">
+        <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-auto bg-gradient-to-r from-yellow-400 to-pink-400 text-black px-8 py-4 rounded-full font-black text-xl shadow-2xl border-2 border-white/30">
+          {notification.msg}
+        </motion.div>
+      </div>
+    );
+  };
+
   const [view, setView] = useState('landing'); // landing, lobby, game, privacy, terms, responsible
   const [tokens, setTokens] = useState(INITIAL_TOKENS);
   const [activeGame, setActiveGame] = useState(null);
@@ -2882,17 +3070,17 @@ export default function App() {
                   <h2 className="text-5xl font-black italic tracking-tighter uppercase">{activeGame.name}</h2>
                 </div>
               </div>
-              {activeGame.type === 'blackjack' && <BlackjackTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
-              {activeGame.type === 'slots' && <SlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
-              {activeGame.type === 'mega-slots' && <MegaSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
-              {activeGame.type === 'ocean-slots' && <OceanSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
-              {activeGame.type === 'cosmic-slots' && <CosmicSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
-              {activeGame.type === 'pharaoh-slots' && <PharaohSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
-              {activeGame.type === 'cyber-slots' && <CyberSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
-              {activeGame.type === 'forest-slots' && <ForestSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
-              {activeGame.type === 'luxe-mega-5' && <LuxeMega5Slot symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} />}
-              {activeGame.type === 'roulette' && <RouletteTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} />}
-              <div className="w-full max-w-3xl bg-zinc-900/50 border border-white/5 p-12 rounded-[3rem] flex flex-col md:flex-row gap-10">
+              {activeGame.type === 'blackjack' && <BlackjackTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} showNotification={showNotification} />}
+              {activeGame.type === 'slots' && <SlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
+              {activeGame.type === 'mega-slots' && <MegaSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
+              {activeGame.type === 'ocean-slots' && <OceanSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
+              {activeGame.type === 'cosmic-slots' && <CosmicSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
+              {activeGame.type === 'pharaoh-slots' && <PharaohSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
+              {activeGame.type === 'cyber-slots' && <CyberSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
+              {activeGame.type === 'forest-slots' && <ForestSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
+              {activeGame.type === 'luxe-mega-5' && <LuxeMega5Slot symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
+              {activeGame.type === 'roulette' && <RouletteTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} showNotification={showNotification} />}
+              {activeGame.type === 'plinko' && <PlinkoGame tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}              <div className="w-full max-w-3xl bg-zinc-900/50 border border-white/5 p-12 rounded-[3rem] flex flex-col md:flex-row gap-10">
                 <div className="w-20 h-20 bg-white/5 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-white/5"><Info className="text-zinc-400" size={32} /></div>
                 <div className="space-y-4">
                   <h4 className="font-black uppercase text-xs tracking-[0.4em] text-zinc-400">Guest Strategy Brief</h4>
