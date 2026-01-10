@@ -2925,23 +2925,18 @@ export default function App() {  // Global notification state (fixed, always vis
     }
   }, []);
 
-  // Load progress from localStorage with user ID
+  // Load progress from localStorage with user ID. Returns the saved progress object or null.
   const loadProgress = useCallback((userId) => {
-    if (userId) {
-      const saved = localStorage.getItem(`luxe_premier_progress_${userId}`);
-      if (saved) {
-        try {
-          const progress = JSON.parse(saved);
-          if (progress.tokens !== undefined) {
-            setTokens(progress.tokens);
-            return true;
-          }
-        } catch (e) {
-          console.error('Error loading progress:', e);
-        }
-      }
+    if (!userId) return null;
+    const saved = localStorage.getItem(`luxe_premier_progress_${userId}`);
+    if (!saved) return null;
+    try {
+      const progress = JSON.parse(saved);
+      return progress && typeof progress === 'object' ? progress : null;
+    } catch (e) {
+      console.error('Error loading progress:', e);
+      return null;
     }
-    return false;
   }, []);
 
   // Auto-save progress when tokens change and user is signed in
@@ -2961,10 +2956,27 @@ export default function App() {  // Global notification state (fixed, always vis
           },
         });
         const profile = await response.json();
-        setUser(tokenResponse);
+            setUser(tokenResponse);
         setUserProfile(profile);
-        // Load saved progress for this user
-        loadProgress(profile.sub);
+
+        // Merge/load/save progress for this user:
+        // - If there's saved progress, use the greater balance between saved and current tokens and don't overwrite a larger saved balance.
+        // - If there's no saved progress, save the current tokens for this account.
+        try {
+          const progress = loadProgress(profile.sub);
+          if (progress && typeof progress === 'object' && progress.tokens !== undefined) {
+            // Use the higher token value to avoid losing progress
+            const merged = Math.max(tokens, progress.tokens);
+            setTokens(merged);
+            // If local current tokens is higher than saved, update saved progress
+            if (tokens > progress.tokens) saveProgress(profile.sub, tokens);
+          } else {
+            // No saved progress — save current tokens to associate with this account
+            saveProgress(profile.sub, tokens);
+          }
+        } catch (e) {
+          console.error('Error merging progress on sign-in:', e);
+        }
       } catch (error) {
         console.error('Error fetching user profile:', error);
       }
