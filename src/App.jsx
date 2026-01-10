@@ -215,57 +215,167 @@ const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
   );
 };
 
-// --- GAME LOGIC (UNCHANGED) ---
+// --- GAME LOGIC (ENHANCED ROULETTE) ---
 
 const RouletteTable = ({ initialMinBet, tokens, setTokens }) => {
   const [bet, setBet] = useState(initialMinBet);
-  const [betType, setBetType] = useState('red'); 
+  const [betType, setBetType] = useState('red');
+  const [selectedNumber, setSelectedNumber] = useState(null);
+  const [showNumberPicker, setShowNumberPicker] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const [message, setMessage] = useState('');
-  const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+  const [wheelRotation, setWheelRotation] = useState(0);
+
+  // European roulette wheel order (0 first) — used for realistic segment layout/animation
+  const wheelOrder = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+  const segmentAngle = 360 / wheelOrder.length;
+  const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+
+  const colorFor = (n) => {
+    if (n === 0) return '#10B981'; // emerald
+    return redNumbers.includes(n) ? '#EF4444' : '#0F172A'; // red or dark (brand-friendly)
+  };
+
+  // Build a conic-gradient string for the wheel's background
+  const wheelGradient = wheelOrder.map((n, i) => `${colorFor(n)} ${i * segmentAngle}deg ${ (i + 1) * segmentAngle }deg`).join(',');
+
+  const highlightClass = (n) => (n === 0 ? 'bg-emerald-500 text-black' : redNumbers.includes(n) ? 'bg-red-600 text-white' : 'bg-zinc-900/80 text-white');
+
   const spin = () => {
     if (spinning || tokens < bet) return;
     setSpinning(true); setMessage(''); setTokens(t => t - bet);
+
+    // small spin sound
+    createClick(700, 0.12);
+
+    // choose result
+    const result = Math.floor(Math.random() * 37);
+    setLastResult(null);
+
+    // Calculate target rotation so the wheel lands with the result under the top pointer
+    const targetIndex = wheelOrder.indexOf(result);
+    const rotations = 6; // full rotations for dramatic effect
+    const targetAngle = rotations * 360 + (targetIndex * segmentAngle);
+
+    // animate rotation by updating state; framer-motion will handle smoothing
+    setWheelRotation(w => w + targetAngle);
+
+    // wait for animation duration then resolve result
+    const durationMs = 3000;
     setTimeout(() => {
-      const result = Math.floor(Math.random() * 37);
-      setLastResult(result); setSpinning(false);
+      setSpinning(false);
+      setLastResult(result);
+
+      // evaluate win
       let won = false; let multiplier = 0;
-      if (typeof betType === 'number') { if (result === betType) { won = true; multiplier = 36; } }
-      else {
-        if (betType === 'red' && redNumbers.includes(result)) { won = true; multiplier = 2; }
-        if (betType === 'black' && !redNumbers.includes(result) && result !== 0) { won = true; multiplier = 2; }
-        if (betType === 'even' && result % 2 === 0 && result !== 0) { won = true; multiplier = 2; }
-        if (betType === 'odd' && result % 2 !== 0) { won = true; multiplier = 2; }
+      if (typeof betType === 'number') {
+        if (result === betType) { won = true; multiplier = 36; }
+      } else if (betType === 'red' && redNumbers.includes(result)) { won = true; multiplier = 2; }
+      else if (betType === 'black' && !redNumbers.includes(result) && result !== 0) { won = true; multiplier = 2; }
+      else if (betType === 'even' && result % 2 === 0 && result !== 0) { won = true; multiplier = 2; }
+      else if (betType === 'odd' && result % 2 !== 0) { won = true; multiplier = 2; }
+      else if (betType === '1st-dozen' && result >= 1 && result <= 12) { won = true; multiplier = 3; }
+      else if (betType === '2nd-dozen' && result >= 13 && result <= 24) { won = true; multiplier = 3; }
+      else if (betType === '3rd-dozen' && result >= 25 && result <= 36) { won = true; multiplier = 3; }
+      else if (betType === '1-18' && result >= 1 && result <= 18) { won = true; multiplier = 2; }
+      else if (betType === '19-36' && result >= 19 && result <= 36) { won = true; multiplier = 2; }
+      else if (betType && betType.startsWith('col-')) {
+        // columns (1,2,3) — numbers arranged into three vertical columns on table
+        const col = parseInt(betType.split('-')[1], 10);
+        if (result !== 0) {
+          const columnIndex = ((result - 1) % 3) + 1; // 1,2,3
+          if (columnIndex === col) { won = true; multiplier = 3; }
+        }
       }
-      if (won) { setTokens(t => t + bet * multiplier); setMessage(`VICTORY +${(bet * multiplier).toLocaleString()}`); }
+
+      if (won) { setTokens(t => t + bet * multiplier); setMessage(`VICTORY +${(bet * multiplier).toLocaleString()}`); createChord([440,660], 0.35, 'sine', 0.18, true); }
       else { setMessage('HOUSE WINS'); }
-    }, 2500);
+    }, durationMs + 120);
   };
+
   return (
-    <div className="flex flex-col items-center gap-12 w-full">
-      <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full border-[12px] border-zinc-800 bg-black flex items-center justify-center overflow-hidden shadow-[0_0_80px_rgba(255,0,0,0.15)]">
-        <motion.div animate={spinning ? { rotate: [0, 3600] } : { rotate: 0 }} transition={{ duration: 2.5, ease: "circOut" }} className="absolute inset-2 border-[1px] border-zinc-700/50 rounded-full flex items-center justify-center">
-            <div className="w-full h-full flex items-start justify-center pt-2"><div className="w-4 h-4 rounded-full bg-zinc-300 shadow-white shadow-sm" /></div>
+    <div className="flex flex-col items-center gap-8 w-full">
+      <div className="relative w-80 h-80 md:w-[420px] md:h-[420px] rounded-full border-[12px] border-zinc-900 bg-[radial-gradient(ellipse_at_center,#0b1220,rgba(0,0,0,0.8))] flex items-center justify-center shadow-[0_0_120px_rgba(0,0,0,0.9)]">
+        {/* Pointer */}
+        <div className="absolute -top-4 w-full flex items-start justify-center pointer-events-none z-30">
+          <div className="w-0 h-0 border-l-8 border-r-8 border-b-16 border-l-transparent border-r-transparent border-b-white shadow-sm" />
+        </div>
+
+        {/* Wheel */}
+        <motion.div animate={{ rotate: wheelRotation }} transition={{ duration: 3, ease: [0.22, 1, 0.36, 1] }} className="absolute inset-4 rounded-full overflow-hidden flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(${wheelGradient})`, transform: 'rotate(0deg)' }} />
+
+          {/* separators and numbers overlay */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {wheelOrder.map((n, i) => {
+              const angle = i * segmentAngle;
+              return (
+                <div key={n} style={{ position: 'absolute', width: '100%', height: '100%', transform: `rotate(${angle}deg)` }}>
+                  <div style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%) rotate(-' + angle + 'deg)', fontSize: 10 }} className={`font-black ${n === 0 ? 'text-black' : redNumbers.includes(n) ? 'text-white' : 'text-white'}`}>
+                    {n}
+                  </div>
+                  {/* thin separator */}
+                  <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 4, height: '6%', background: 'rgba(255,255,255,0.06)' }} />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* inner wheel center */}
+          <div className="w-32 h-32 rounded-full bg-gradient-to-b from-black/40 to-black/80 border border-white/5 flex items-center justify-center z-20">
+            <div className="text-center">
+              <div className="text-4xl font-black text-white">Luxe</div>
+              <div className="text-xs uppercase tracking-widest text-zinc-400">Prestige</div>
+            </div>
+          </div>
         </motion.div>
-        <div className="text-center z-10"><AnimatePresence mode="wait"><motion.div key={lastResult} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
-          <span className={`text-8xl font-black mb-2 tracking-tighter ${lastResult !== null ? (lastResult === 0 ? 'text-emerald-500' : redNumbers.includes(lastResult) ? 'text-red-500' : 'text-white') : 'text-zinc-800'}`}>
+
+        {/* wheel rim */}
+        <div className="absolute inset-0 rounded-full pointer-events-none" style={{ boxShadow: 'inset 0 16px 25px rgba(0,0,0,0.6), 0 10px 40px rgba(16,24,39,0.6)' }} />
+      </div>
+
+      {/* Display result prominently */}
+      <div className="text-center">
+        <AnimatePresence mode="wait"><motion.div key={lastResult} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
+          <span className={`text-6xl md:text-7xl font-black mb-1 tracking-tighter ${lastResult !== null ? (lastResult === 0 ? 'text-emerald-500' : redNumbers.includes(lastResult) ? 'text-red-500' : 'text-white') : 'text-zinc-800'}`}>
             {spinning ? '...' : (lastResult ?? '--')}
           </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.8em] text-zinc-500">{spinning ? 'ORBITING' : 'POSITION'}</span>
-        </motion.div></AnimatePresence></div>
+          <span className="text-[10px] font-black uppercase tracking-[0.8em] text-zinc-500">{spinning ? 'SPINNING' : 'RESULT'}</span>
+        </motion.div></AnimatePresence>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-lg">
-        {['red', 'black', 'even', 'odd'].map(type => (
-          <button key={type} onClick={() => setBetType(type)} className={`py-4 rounded-2xl font-black uppercase text-xs tracking-widest border transition-all ${betType === type ? 'bg-white text-black border-white scale-105' : 'bg-black/40 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
-            {type}
+
+      {/* Bet type controls */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 w-full max-w-3xl">
+        {['red','black','even','odd','1-18','19-36','1st-dozen','2nd-dozen','3rd-dozen','col-1','col-2','col-3'].map(type => (
+          <button key={type} onClick={() => { setBetType(type); setSelectedNumber(null); setShowNumberPicker(false); }} className={`py-3 rounded-2xl font-black uppercase text-xs tracking-widest border transition-all ${betType === type ? 'bg-white text-black border-white scale-105' : 'bg-black/40 border-zinc-800 text-zinc-300 hover:border-zinc-700'}`}>
+            {type.replace('-', ' ').toUpperCase()}
           </button>
         ))}
       </div>
+
+      {/* Number picker toggle and grid */}
+      <div className="w-full max-w-3xl flex flex-col items-center gap-4">
+        <div className="w-full flex items-center justify-between">
+          <button onClick={() => { setShowNumberPicker(s => !s); setSelectedNumber(null); setBetType('red'); }} className="py-2 px-4 rounded-lg bg-black/50 border border-white/5 text-sm font-black">{showNumberPicker ? 'Hide Numbers' : 'Pick Specific Number'}</button>
+          {selectedNumber !== null && <div className="text-sm font-black">Selected: <span className={`px-3 py-1 rounded-full ${highlightClass(selectedNumber)}`}>{selectedNumber}</span></div>}
+        </div>
+
+        {showNumberPicker && (
+          <div className="grid grid-cols-7 gap-2 w-full">
+            {Array.from({ length: 37 }).map((_, n) => (
+              <button key={n} onClick={() => { setSelectedNumber(n); setBetType(n); }} disabled={spinning} className={`py-2 rounded-lg font-black text-sm ${n === 0 ? 'bg-emerald-500 text-black' : redNumbers.includes(n) ? 'bg-red-600 text-white' : 'bg-zinc-900/80 text-white'}`}>{n}</button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={spinning} />
-      <button onClick={spin} disabled={spinning} className="group w-full max-w-md bg-white text-black py-8 rounded-[2rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl disabled:opacity-50 transition-all hover:bg-zinc-200">
-        {spinning ? 'In Orbit...' : 'Commit Wager'}
+
+      <button onClick={spin} disabled={spinning} className="group w-full max-w-md bg-white text-black py-5 rounded-[1.6rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl disabled:opacity-50 transition-all hover:bg-zinc-100">
+        {spinning ? 'Spinning...' : 'Spin the Wheel'}
       </button>
+
       {message && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-black italic tracking-tight text-white">{message}</motion.div>}
     </div>
   );
