@@ -982,32 +982,39 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
       </button>
 
       {/* Win message with crazy effects */}
-      <AnimatePresence>
-        {winMsg && (
-          <motion.div
-            initial={{ scale: 0, rotate: -180, opacity: 0 }}
-            animate={{ 
-              scale: [0, 1.2, 1],
-              rotate: [0, 10, -10, 0],
-              opacity: 1,
-              y: [100, 0]
-            }}
-            exit={{ scale: 0, opacity: 0 }}
-            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl md:text-4xl border-4 border-white/50 ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-yellow-400 via-pink-400 to-cyan-400 text-black shadow-[0_0_50px_rgba(255,215,0,0.8)]'}`
-            style={{
-              textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-              animation: 'pulse 0.7s infinite'
-            }}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.35, repeat: Infinity }}
-            >
-              {winMsg}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/** precompute error state to avoid complex inline expressions that confused the parser */}
+      {(() => {
+        const winIsError = winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM'));
+        const winClass = winIsError ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-yellow-400 via-pink-400 to-cyan-400 text-black shadow-[0_0_50px_rgba(255,215,0,0.8)]';
+        return (
+          <AnimatePresence>
+            {winMsg && (
+              <motion.div
+                initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                animate={{ 
+                  scale: [0, 1.2, 1],
+                  rotate: [0, 10, -10, 0],
+                  opacity: 1,
+                  y: [100, 0]
+                }}
+                exit={{ scale: 0, opacity: 0 }}
+                className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl md:text-4xl border-4 border-white/50 ${winClass}`}
+                style={{
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                  animation: 'pulse 0.7s infinite'
+                }}
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 0.35, repeat: Infinity }}
+                >
+                  {winMsg}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        );
+      })()}
     </div>
   );
 };
@@ -1256,7 +1263,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl border-4 border-white/50 ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-cyan-400 to-teal-400 text-black shadow-[0_0_50px_rgba(0,255,255,0.8)]'}`
+            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl border-4 border-white/50 ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-cyan-400 to-teal-400 text-black shadow-[0_0_50px_rgba(0,255,255,0.8)]'}` }
           >
             {winMsg}
           </motion.div>
@@ -1524,7 +1531,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-purple-400 to-pink-400 text-black shadow-[0_0_60px_rgba(138,43,226,0.9)] border-4 border-white/50'}`
+            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-purple-400 to-pink-400 text-black shadow-[0_0_60px_rgba(138,43,226,0.9)] border-4 border-white/50'}` }
           >
             {winMsg}
           </motion.div>
@@ -1772,7 +1779,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-yellow-400 to-orange-400 text-black shadow-[0_0_50px_rgba(255,215,0,0.9)] border-4 border-white/50'}`
+            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-yellow-400 to-orange-400 text-black shadow-[0_0_50px_rgba(255,215,0,0.9)] border-4 border-white/50'}` }
           >
             {winMsg}
           </motion.div>
@@ -2033,7 +2040,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className={`absolute -top-8 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-fuchsia-400 to-purple-400 text-black shadow-[0_0_60px_rgba(255,0,255,1)] border-4 border-white/50'}`
+            className={`absolute -top-8 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-fuchsia-400 to-purple-400 text-black shadow-[0_0_60px_rgba(255,0,255,1)] border-4 border-white/50'}` }
           >
             {winMsg}
           </motion.div>
@@ -2292,7 +2299,7 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className={`absolute -top-8 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-green-400 to-emerald-400 text-black shadow-[0_0_50px_rgba(0,255,0,0.9)] border-4 border-white/50'}`
+            className={`absolute -top-8 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-green-400 to-emerald-400 text-black shadow-[0_0_50px_rgba(0,255,0,0.9)] border-4 border-white/50'}` } 
           >
             {winMsg}
           </motion.div>
