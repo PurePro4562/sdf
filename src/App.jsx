@@ -179,48 +179,90 @@ const Card = ({ card, hidden, index }) => (
 
 const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
   const chips = [10, 50, 100, 500, 1000];
+  const step = Math.max(1, minBet || 1);
+
   const addBet = (val) => {
-    const next = Math.min(currentBet + val, maxTokens);
-    setBet(next);
+    setBet(prev => {
+      const base = Number.isFinite(prev) ? prev : 0;
+      return Math.max(minBet, Math.min(maxTokens, base + val));
+    });
+  };
+
+  const changeBy = (delta) => {
+    setBet(prev => {
+      const base = Number.isFinite(prev) ? prev : 0;
+      const next = Math.round(base + delta);
+      return Math.max(minBet, Math.min(maxTokens, next));
+    });
   };
 
   const onInputChange = (e) => {
-    const v = parseInt(e.target.value, 10);
-    setBet(Number.isFinite(v) ? v : 0);
+    // Allow only digits while typing
+    const digits = e.target.value.replace(/[^0-9]/g, '');
+    setBet(digits === '' ? 0 : parseInt(digits, 10));
   };
 
   const onInputBlur = () => {
-    if (currentBet < minBet) setBet(minBet);
+    if (!Number.isFinite(currentBet) || currentBet === 0) setBet(minBet);
+    else if (currentBet < minBet) setBet(minBet);
     else if (currentBet > maxTokens) setBet(maxTokens);
   };
+
+  const isUnderMin = currentBet < minBet;
+  const isOver = currentBet > maxTokens;
 
   return (
     <div className={`flex flex-col gap-6 items-center w-full max-w-lg ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
       <div className="flex items-center gap-4 w-full">
-        <button onClick={() => setBet(minBet)} className="bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Clear</button>
-        <div className="flex-1 bg-gradient-to-b from-zinc-900 to-black border-2 border-zinc-800 rounded-3xl p-5 flex flex-col items-center shadow-2xl">
+        <button onClick={() => setBet(minBet)} disabled={disabled} className="bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Clear</button>
+
+        <div className={`flex-1 bg-gradient-to-b from-zinc-900 to-black border-2 border-zinc-800 rounded-3xl p-5 flex flex-col items-center shadow-2xl ${isOver ? 'ring-2 ring-red-500' : isUnderMin ? 'ring-2 ring-yellow-400' : ''}`}>
            <span className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.4em] mb-1">Current Stakes</span>
            <div className="flex items-center gap-3">
              <Coins size={20} className="text-yellow-500" />
+             <span className="text-4xl font-mono font-black tracking-tighter text-white">{(Number.isFinite(currentBet) ? currentBet : 0).toLocaleString()}</span>
+           </div>
+
+           <div className="mt-3 flex items-center gap-3 justify-center w-full">
+             <button onClick={() => changeBy(-step)} disabled={disabled || (Number.isFinite(currentBet) && currentBet <= minBet)} className="bg-white/5 hover:bg-white/10 px-3 py-2 rounded-xl border border-white/10 text-sm font-black text-white/60">
+               <Minus size={16} />
+             </button>
+
              <input
-               type="number"
-               min={minBet}
-               max={maxTokens}
-               value={currentBet}
+               type="text"
+               inputMode="numeric"
+               value={Number.isFinite(currentBet) ? currentBet : ''}
                onChange={onInputChange}
                onBlur={onInputBlur}
-               className="bg-transparent text-4xl font-mono font-black tracking-tighter text-white text-right w-36 outline-none"
+               disabled={disabled}
+               className="bg-transparent text-2xl font-mono font-black tracking-tighter text-white text-center w-36 outline-none border-b border-white/10 py-2"
+               aria-label="Bet amount"
              />
+
+             <button onClick={() => changeBy(step)} disabled={disabled || (Number.isFinite(currentBet) && currentBet >= maxTokens)} className="bg-white/5 hover:bg-white/10 px-3 py-2 rounded-xl border border-white/10 text-sm font-black text-white/60">
+               <Plus size={16} />
+             </button>
            </div>
-           {currentBet > maxTokens && (
+
+           <div className="mt-2 text-xs flex justify-between w-full px-4">
+             <div className={`${isUnderMin ? 'text-yellow-300' : 'text-zinc-500'}`}>Min: {minBet.toLocaleString()}</div>
+             <div className={`${isOver ? 'text-red-300' : 'text-zinc-500'}`}>Balance: {maxTokens.toLocaleString()}</div>
+           </div>
+
+           {isOver && (
              <div className="mt-2 text-sm font-black text-red-400">Insufficient funds</div>
            )}
+           {isUnderMin && (
+             <div className="mt-2 text-sm font-black text-yellow-400">Below minimum bet</div>
+           )}
         </div>
-        <button onClick={() => setBet(maxTokens)} className="bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Max</button>
+
+        <button onClick={() => setBet(maxTokens)} disabled={disabled} className="bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Max</button>
       </div>
+
       <div className="flex flex-wrap justify-center gap-4">
         {chips.map(chip => (
-          <button key={chip} onClick={() => addBet(chip)} className="group relative flex flex-col items-center">
+          <button key={chip} onClick={() => addBet(chip)} disabled={disabled} className="group relative flex flex-col items-center">
             <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center transition-all group-hover:scale-110 group-active:scale-95 shadow-xl
               ${chip === 10 ? 'border-blue-500/50 bg-blue-500/20' : 
                 chip === 50 ? 'border-red-500/50 bg-red-500/20' : 
