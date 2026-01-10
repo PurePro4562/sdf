@@ -180,9 +180,20 @@ const Card = ({ card, hidden, index }) => (
 const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
   const chips = [10, 50, 100, 500, 1000];
   const addBet = (val) => {
-    if (currentBet + val <= maxTokens) setBet(currentBet + val);
-    else setBet(maxTokens);
+    const next = Math.min(currentBet + val, maxTokens);
+    setBet(next);
   };
+
+  const onInputChange = (e) => {
+    const v = parseInt(e.target.value, 10);
+    setBet(Number.isFinite(v) ? v : 0);
+  };
+
+  const onInputBlur = () => {
+    if (currentBet < minBet) setBet(minBet);
+    else if (currentBet > maxTokens) setBet(maxTokens);
+  };
+
   return (
     <div className={`flex flex-col gap-6 items-center w-full max-w-lg ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
       <div className="flex items-center gap-4 w-full">
@@ -191,8 +202,19 @@ const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
            <span className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.4em] mb-1">Current Stakes</span>
            <div className="flex items-center gap-3">
              <Coins size={20} className="text-yellow-500" />
-             <span className="text-4xl font-mono font-black tracking-tighter text-white">{currentBet.toLocaleString()}</span>
+             <input
+               type="number"
+               min={minBet}
+               max={maxTokens}
+               value={currentBet}
+               onChange={onInputChange}
+               onBlur={onInputBlur}
+               className="bg-transparent text-4xl font-mono font-black tracking-tighter text-white text-right w-36 outline-none"
+             />
            </div>
+           {currentBet > maxTokens && (
+             <div className="mt-2 text-sm font-black text-red-400">Insufficient funds</div>
+           )}
         </div>
         <button onClick={() => setBet(maxTokens)} className="bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Max</button>
       </div>
@@ -243,7 +265,9 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens }) => {
   const highlightClass = (n) => (n === 0 ? 'bg-emerald-500 text-black' : redNumbers.includes(n) ? 'bg-red-600 text-white' : 'bg-zinc-900/80 text-white');
 
   const spin = () => {
-    if (spinning || tokens < bet) return;
+    if (spinning) return;
+    if (bet > tokens) { setMessage('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setMessage(''), 2200); return; }
+    if (bet < initialMinBet) { setMessage(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setMessage(''), 2200); return; }
     setSpinning(true); setMessage(''); setTokens(t => t - bet);
 
     // small spin sound
@@ -387,7 +411,9 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNo
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
   const spin = () => {
-    if (isSpinning || tokens < bet) return;
+    if (isSpinning) return;
+    if (bet > tokens) { setWinMsg('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setWinMsg(''), 2200); return; }
+    if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true); setWinMsg(''); setTokens(t => t - bet);
     playSpinSound('default');
     const results = [symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)]];
@@ -438,7 +464,7 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNo
       </button>
       <AnimatePresence>
         {winMsg && (
-          <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="absolute -top-16 z-50 bg-emerald-500 text-black px-12 py-5 rounded-full font-black text-2xl shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+          <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className={`absolute -top-16 z-50 px-12 py-5 rounded-full font-black text-2xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-emerald-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.5)]'}`}>
             {winMsg}
           </motion.div>
         )}
@@ -720,8 +746,10 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
   };
 
   const spin = () => {
-    if (isSpinning || tokens < bet) return;
-    setIsSpinning(true); 
+    if (isSpinning) return;
+    if (bet > tokens) { setWinMsg('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setWinMsg(''), 2200); return; }
+    if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
+    setIsSpinning(true);
     setWinMsg(''); 
     setMultiplier(0);
     setShowConfetti(false);
@@ -965,7 +993,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
               y: [100, 0]
             }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-16 z-50 bg-gradient-to-r from-yellow-400 via-pink-400 to-cyan-400 text-black px-16 py-6 rounded-full font-black text-3xl md:text-4xl shadow-[0_0_50px_rgba(255,215,0,0.8)] border-4 border-white/50"
+            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl md:text-4xl border-4 border-white/50 ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-yellow-400 via-pink-400 to-cyan-400 text-black shadow-[0_0_50px_rgba(255,215,0,0.8)]'}`
             style={{
               textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
               animation: 'pulse 0.7s infinite'
@@ -1013,7 +1041,9 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
   };
 
   const spin = () => {
-    if (isSpinning || tokens < bet) return;
+    if (isSpinning) return;
+    if (bet > tokens) { setWinMsg('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setWinMsg(''), 2200); return; }
+    if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true);
     setWinMsg('');
     setMultiplier(0);
@@ -1226,7 +1256,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-16 z-50 bg-gradient-to-r from-cyan-400 to-teal-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(0,255,255,0.8)] border-4 border-white/50"
+            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl border-4 border-white/50 ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-cyan-400 to-teal-400 text-black shadow-[0_0_50px_rgba(0,255,255,0.8)]'}`
           >
             {winMsg}
           </motion.div>
@@ -1277,7 +1307,9 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
   };
 
   const spin = () => {
-    if (isSpinning || tokens < bet) return;
+    if (isSpinning) return;
+    if (bet > tokens) { setWinMsg('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setWinMsg(''), 2200); return; }
+    if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true);
     setWinMsg('');
     setMultiplier(0);
@@ -1492,7 +1524,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-16 z-50 bg-gradient-to-r from-purple-400 to-pink-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_60px_rgba(138,43,226,0.9)] border-4 border-white/50"
+            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-purple-400 to-pink-400 text-black shadow-[0_0_60px_rgba(138,43,226,0.9)] border-4 border-white/50'}`
           >
             {winMsg}
           </motion.div>
@@ -1530,7 +1562,9 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
   };
 
   const spin = () => {
-    if (isSpinning || tokens < bet) return;
+    if (isSpinning) return;
+    if (bet > tokens) { setWinMsg('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setWinMsg(''), 2200); return; }
+    if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true);
     setWinMsg('');
     setMultiplier(0);
@@ -1738,7 +1772,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-16 z-50 bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(255,215,0,0.9)] border-4 border-white/50"
+            className={`absolute -top-16 z-50 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-yellow-400 to-orange-400 text-black shadow-[0_0_50px_rgba(255,215,0,0.9)] border-4 border-white/50'}`
           >
             {winMsg}
           </motion.div>
@@ -1775,7 +1809,9 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
   };
 
   const spin = () => {
-    if (isSpinning || tokens < bet) return;
+    if (isSpinning) return;
+    if (bet > tokens) { setWinMsg('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setWinMsg(''), 2200); return; }
+    if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true);
     setWinMsg('');
     setMultiplier(0);
@@ -1997,7 +2033,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-8 bg-gradient-to-r from-fuchsia-400 to-purple-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_60px_rgba(255,0,255,1)] border-4 border-white/50"
+            className={`absolute -top-8 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-fuchsia-400 to-purple-400 text-black shadow-[0_0_60px_rgba(255,0,255,1)] border-4 border-white/50'}`
           >
             {winMsg}
           </motion.div>
@@ -2036,7 +2072,9 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
   };
 
   const spin = () => {
-    if (isSpinning || tokens < bet) return;
+    if (isSpinning) return;
+    if (bet > tokens) { setWinMsg('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setWinMsg(''), 2200); return; }
+    if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true);
     setWinMsg('');
     setMultiplier(0);
@@ -2254,7 +2292,7 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
             initial={{ scale: 0, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute -top-8 bg-gradient-to-r from-green-400 to-emerald-400 text-black px-16 py-6 rounded-full font-black text-3xl shadow-[0_0_50px_rgba(0,255,0,0.9)] border-4 border-white/50"
+            className={`absolute -top-8 px-16 py-6 rounded-full font-black text-3xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-green-400 to-emerald-400 text-black shadow-[0_0_50px_rgba(0,255,0,0.9)] border-4 border-white/50'}`
           >
             {winMsg}
           </motion.div>
@@ -2296,7 +2334,9 @@ const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet }) =>
   };
 
   const spin = () => {
-    if (isSpinning || tokens < bet) return;
+    if (isSpinning) return;
+    if (bet > tokens) { setIsSpinning(false); setWinMsg('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setWinMsg(''), 2200); return; }
+    if (bet < initialMinBet) { setIsSpinning(false); setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true);
     setWinMsg('');
     setMultiplier(0);
@@ -2672,7 +2712,7 @@ const BlackjackTable = ({ initialMinBet, tokens, setTokens }) => {
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
   const [bet, setBet] = useState(initialMinBet);
-  const startRound = () => { if (tokens < bet) return; setTokens(t => t - bet); const d = createDeck(); setPlayerHand([d[0], d[2]]); setDealerHand([d[1], d[3]]); setDeck(d.slice(4)); setStatus('playing'); setMessage(''); };
+  const startRound = () => { if (tokens < bet) { setMessage('INSUFFICIENT FUNDS'); createClick(600, 0.12); setTimeout(() => setMessage(''), 2200); return; } if (bet < initialMinBet) { setMessage(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setMessage(''), 2200); return; } setTokens(t => t - bet); const d = createDeck(); setPlayerHand([d[0], d[2]]); setDealerHand([d[1], d[3]]); setDeck(d.slice(4)); setStatus('playing'); setMessage(''); };
   const hit = () => { const card = deck[0]; const newHand = [...playerHand, card]; setPlayerHand(newHand); setDeck(deck.slice(1)); if (calcHand(newHand) > 21) { setStatus('result'); setMessage('BUST'); } };
   const stand = () => setStatus('dealer_turn');
   useEffect(() => {
