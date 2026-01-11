@@ -447,7 +447,7 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens, showNotification }) =
   );
 };
 
-const weightedPick = (symbols) => {
+const weightedPick = (symbols, avoid = [], avoidFactor = 0.02) => {
   // Assign very low weights to jackpot/high-value symbols and much higher weights
   // to common symbols so matches become far less likely.
   const weightFor = (s) => {
@@ -457,7 +457,13 @@ const weightedPick = (symbols) => {
     if (medium.includes(s)) return 3; // uncommon
     return 8; // common filler
   };
-  const pool = symbols.flatMap(s => Array(weightFor(s)).fill(s));
+  const pool = symbols.flatMap(s => {
+    let w = weightFor(s);
+    if (avoid.includes(s)) {
+      w = Math.max(1, Math.floor(w * avoidFactor));
+    }
+    return Array(w).fill(s);
+  });
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
@@ -776,7 +782,7 @@ const ConfettiParticle = ({ x, y, color, delay }) => (
 
 // Ultra-entertaining slot machine with crazy effects
 const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
-  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [reels, setReels] = useState([weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
@@ -815,11 +821,10 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, sh
     setTokens(t => t - bet);
     playSpinSound('default');
     
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)], 
-      symbols[Math.floor(Math.random() * symbols.length)], 
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
     
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -1084,7 +1089,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, sh
 
 // Ocean Depths Slot - Underwater theme with bubbles
 const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
-  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [reels, setReels] = useState([weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
@@ -1339,7 +1344,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, s
 
 // Cosmic Void Slot - Space theme with stars and nebulas
 const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
-  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [reels, setReels] = useState([weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
@@ -1610,7 +1615,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, 
 
 // Pharaoh's Fortune Slot - Egyptian theme
 const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
-  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [reels, setReels] = useState([weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
@@ -1861,7 +1866,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet,
 
 // Neon Cyber Slot - Cyberpunk theme
 const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
-  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [reels, setReels] = useState([weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
@@ -2122,7 +2127,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, s
 
 // Forest Magic Slot - Nature theme
 const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
-  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [reels, setReels] = useState([weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
@@ -2381,7 +2386,7 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, 
 
 // LUXEBLACK MEGA 5-COLUMN SLOT - Premium Professional Experience
 const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
-  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2], symbols[3], symbols[4]]);
+  const [reels, setReels] = useState([weightedPick(symbols), weightedPick(symbols), weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
