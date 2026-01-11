@@ -281,7 +281,7 @@ const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
 
 // --- GAME LOGIC (ENHANCED ROULETTE) ---
 
-const RouletteTable = ({ initialMinBet, tokens, setTokens }) => {
+const RouletteTable = ({ initialMinBet, tokens, setTokens, showNotification }) => {
   const [bet, setBet] = useState(initialMinBet);
   const [betType, setBetType] = useState('red');
   const [selectedNumber, setSelectedNumber] = useState(null);
@@ -355,8 +355,8 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens }) => {
         }
       }
 
-      if (won) { setTokens(t => t + bet * multiplier); setMessage(`VICTORY +${(bet * multiplier).toLocaleString()}`); createChord([440,660], 0.35, 'sine', 0.18, true); }
-      else { setMessage('HOUSE WINS'); }
+      if (won) { setTokens(t => t + bet * multiplier); setMessage(`VICTORY +${(bet * multiplier).toLocaleString()}`); if (typeof showNotification === 'function') showNotification(`VICTORY +${(bet * multiplier).toLocaleString()}`, { variant: 'success' }); createChord([440,660], 0.35, 'sine', 0.18, true); }
+      else { setMessage('HOUSE WINS'); if (typeof showNotification === 'function') showNotification('House wins — better luck next time', { variant: 'error' }); }
     }, durationMs + 120);
   };
 
@@ -498,7 +498,9 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNo
     }
     if (mult > 0) {
       playWinSound(mult, 'default');
-      if (typeof showNotification === 'function') showNotification(message || `WIN +${(bet * mult).toLocaleString()}`);
+      if (typeof showNotification === 'function') showNotification(message || `WIN +${(bet * mult).toLocaleString()}`, { variant: 'success' });
+    } else {
+      if (typeof showNotification === 'function') showNotification('You lost — House wins', { variant: 'error' });
     }
   };
   return (
@@ -773,7 +775,7 @@ const ConfettiParticle = ({ x, y, color, delay }) => (
 );
 
 // Ultra-entertaining slot machine with crazy effects
-const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
   const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
@@ -870,6 +872,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
       setMultiplier(mult);
       setWinMsg(message);
       playWinSound(mult, 'default');
+      if (typeof showNotification === 'function') showNotification(message, { variant: 'success' });
       
       if (isMegaWin) {
         setShowConfetti(true);
@@ -882,6 +885,8 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
         }, 2000);
         setTimeout(() => setShowConfetti(false), 3000);
       }
+    } else {
+      if (typeof showNotification === 'function') showNotification('You lost — House wins', { variant: 'error' });
     }
   };
 
@@ -1078,7 +1083,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) 
 // ========== THEMED SLOT MACHINES WITH BONUS ROUNDS ==========
 
 // Ocean Depths Slot - Underwater theme with bubbles
-const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
   const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
@@ -1159,6 +1164,9 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
       setWinMsg(message);
       playWinSound(mult, 'ocean');
       createBubble();
+      if (typeof showNotification === 'function') showNotification(message, { variant: 'success' });
+    } else {
+      if (typeof showNotification === 'function') showNotification('You lost — House wins', { variant: 'error' });
     }
 
     if (triggerBonus) {
@@ -1330,7 +1338,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
 };
 
 // Cosmic Void Slot - Space theme with stars and nebulas
-const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
   const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
@@ -1423,6 +1431,9 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
       setMultiplier(mult);
       setWinMsg(message);
       playWinSound(mult, 'cosmic');
+      if (typeof showNotification === 'function') showNotification(message, { variant: 'success' });
+    } else {
+      if (typeof showNotification === 'function') showNotification('You lost — House wins', { variant: 'error' });
     }
 
     if (triggerBonus) {
@@ -1598,7 +1609,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
 };
 
 // Pharaoh's Fortune Slot - Egyptian theme
-const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
   const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
@@ -1680,6 +1691,9 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
       setWinMsg(message);
       playWinSound(mult, 'egyptian');
       createSandStorm();
+      if (typeof showNotification === 'function') showNotification(message, { variant: 'success' });
+    } else {
+      if (typeof showNotification === 'function') showNotification('You lost — House wins', { variant: 'error' });
     }
 
     if (triggerBonus) {
@@ -1846,7 +1860,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet 
 };
 
 // Neon Cyber Slot - Cyberpunk theme
-const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
   const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
@@ -2107,7 +2121,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet })
 };
 
 // Forest Magic Slot - Nature theme
-const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
   const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
@@ -2366,7 +2380,7 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet }
 };
 
 // LUXEBLACK MEGA 5-COLUMN SLOT - Premium Professional Experience
-const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet }) => {
+const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
   const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2], symbols[3], symbols[4]]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
@@ -2768,7 +2782,7 @@ const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet }) =>
   );
 };
 
-const BlackjackTable = ({ initialMinBet, tokens, setTokens }) => {
+const BlackjackTable = ({ initialMinBet, tokens, setTokens, showNotification }) => {
   const [deck, setDeck] = useState(createDeck());
   const [playerHand, setPlayerHand] = useState([]);
   const [dealerHand, setDealerHand] = useState([]);
@@ -2783,9 +2797,9 @@ const BlackjackTable = ({ initialMinBet, tokens, setTokens }) => {
       let dHand = [...dealerHand]; let dDeck = [...deck];
       while (calcHand(dHand) < 17) { dHand.push(dDeck[0]); dDeck = dDeck.slice(1); }
       setDealerHand(dHand); setDeck(dDeck); const pS = calcHand(playerHand); const dS = calcHand(dHand); setStatus('result');
-      if (dS > 21 || pS > dS) { setMessage('PLAYER WINS'); setTokens(t => t + bet * 2); }
-      else if (pS === dS) { setMessage('PUSH'); setTokens(t => t + bet); }
-      else { setMessage('DEALER WINS'); }
+      if (dS > 21 || pS > dS) { setMessage('PLAYER WINS'); setTokens(t => t + bet * 2); if (typeof showNotification === 'function') showNotification(`PLAYER WINS +${(bet * 2).toLocaleString()}`, { variant: 'success' }); }
+      else if (pS === dS) { setMessage('PUSH'); setTokens(t => t + bet); if (typeof showNotification === 'function') showNotification('PUSH - bet returned', { variant: 'info' }); }
+      else { setMessage('DEALER WINS'); if (typeof showNotification === 'function') showNotification('DEALER WINS - you lost', { variant: 'error' }); }
     }
   }, [status]);
   return (
@@ -2910,9 +2924,10 @@ export default function App() {  // Global notification state (fixed, always vis
 
   const GlobalNotification = ({ notification }) => {
     if (!notification) return null;
+    const notifClass = notification.variant === 'success' ? 'bg-emerald-400 text-black' : notification.variant === 'error' ? 'bg-red-600 text-white' : notification.variant === 'info' ? 'bg-slate-500 text-white' : 'bg-gradient-to-r from-yellow-400 to-pink-400 text-black';
     return (
       <div className="fixed left-1/2 -translate-x-1/2 top-8 z-[9999] pointer-events-none">
-        <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-auto bg-gradient-to-r from-yellow-400 to-pink-400 text-black px-8 py-4 rounded-full font-black text-xl shadow-2xl border-2 border-white/30">
+        <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className={`pointer-events-auto ${notifClass} px-8 py-4 rounded-full font-black text-xl shadow-2xl border-2 border-white/30`}>
           {notification.msg}
         </motion.div>
       </div>
