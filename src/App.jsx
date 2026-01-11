@@ -2966,10 +2966,11 @@ export default function App() {  // Global notification state (fixed, always vis
 
   // Auto-save progress when tokens change and user is signed in
   useEffect(() => {
-    if (user?.sub) {
-      saveProgress(user.sub, tokens);
+    const id = user?.sub || userProfile?.sub;
+    if (id) {
+      saveProgress(id, tokens);
     }
-  }, [tokens, user, saveProgress]);
+  }, [tokens, user, userProfile, saveProgress]);
 
   // Google Sign-In
   const login = useGoogleLogin({
@@ -2981,7 +2982,8 @@ export default function App() {  // Global notification state (fixed, always vis
           },
         });
         const profile = await response.json();
-            setUser(tokenResponse);
+            // Store both token info and profile (merge) so `sub` is available for saves
+            setUser({ ...tokenResponse, ...profile });
         setUserProfile(profile);
 
         // Merge/load/save progress for this user:
