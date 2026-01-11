@@ -447,8 +447,22 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens }) => {
   );
 };
 
+const weightedPick = (symbols) => {
+  // Assign very low weights to jackpot/high-value symbols and much higher weights
+  // to common symbols so matches become far less likely.
+  const weightFor = (s) => {
+    const rare = ['7️⃣','🔥','💎','👑','🎰','💰','🎆','💫'];
+    if (rare.includes(s)) return 1; // very rare
+    const medium = ['⭐','⚡','⚡️','🌙','🌟','🌊','🌌','🚀','💠','🌠','✨','💜','🍀','🍒','🔔','🎲','⚱️'];
+    if (medium.includes(s)) return 3; // uncommon
+    return 8; // common filler
+  };
+  const pool = symbols.flatMap(s => Array(weightFor(s)).fill(s));
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+
 const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNotification }) => {
-  const [reels, setReels] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [reels, setReels] = useState([weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMsg, setWinMsg] = useState('');
   const [bet, setBet] = useState(initialMinBet);
@@ -458,7 +472,7 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNo
     if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true); setWinMsg(''); setTokens(t => t - bet);
     playSpinSound('default');
-    const results = [symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)]];
+    const results = [weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)];
     [700, 1200, 1700].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
@@ -493,7 +507,7 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNo
         {reels.map((symbol, i) => (
           <div key={i} className="relative w-28 h-48 md:w-36 md:h-56 bg-gradient-to-b from-zinc-900 to-black rounded-[2rem] overflow-hidden border border-white/10 flex items-center justify-center">
             <motion.div key={isSpinning ? `spin-${i}` : symbol} initial={isSpinning ? { y: -400 } : { y: -50 }} animate={{ y: 0 }} transition={{ repeat: isSpinning ? Infinity : 0, duration: isSpinning ? 0.06 : 0.4, ease: isSpinning ? "linear" : "backOut" }} className={`text-6xl md:text-8xl ${isSpinning ? 'blur-xl opacity-20' : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>
-              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+              {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none" />
           </div>
