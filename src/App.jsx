@@ -3017,7 +3017,7 @@ export default function App() {  // Global notification state (fixed, always vis
   const handleSignOut = () => {
     setUser(null);
     setUserProfile(null);
-    setTokens(INITIAL_TOKENS);
+    // Keep local token balance when signing out so accidental resets don't overwrite saved progress on next sign-in
   };
 
   const startPlaying = (game) => { setActiveGame(game); setView('game'); window.scrollTo(0,0); };
