@@ -478,7 +478,10 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNo
     if (bet < initialMinBet) { setWinMsg(`MINIMUM BET ${initialMinBet}`); createClick(400, 0.08); setTimeout(() => setWinMsg(''), 2200); return; }
     setIsSpinning(true); setWinMsg(''); setTokens(t => t - bet);
     playSpinSound('default');
-    const results = [weightedPick(symbols), weightedPick(symbols), weightedPick(symbols)];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
     [700, 1200, 1700].forEach((d, i) => {
       setTimeout(() => {
         setReels(prev => { const n = [...prev]; n[i] = results[i]; return n; });
@@ -978,7 +981,7 @@ const MegaSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, sh
                 transform: isSpinning ? 'translateZ(0)' : 'none'
               }}
             >
-              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+              {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             
             {/* Glowing overlay */}
@@ -1124,11 +1127,10 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, s
     playSpinSound('ocean');
     createBubble();
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -1197,11 +1199,10 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, s
     playSpinSound('ocean');
     createBubble();
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -1275,7 +1276,7 @@ const OceanSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, s
               transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
               className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_30px_rgba(0,255,255,0.6)]'}`}
             >
-              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+              {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-blue-900/50 via-transparent to-teal-900/50 pointer-events-none" />
           </motion.div>
@@ -1392,11 +1393,10 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, 
     setTokens(t => t - bet);
     playSpinSound('cosmic');
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -1463,11 +1463,10 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, 
     setBonusSpins(prev => prev - 1);
     playSpinSound('cosmic');
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -1546,7 +1545,7 @@ const CosmicSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, 
                 textShadow: isSpinning ? 'none' : '0 0 30px currentColor, 0 0 60px currentColor'
               }}
             >
-              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+              {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-purple-900/40 via-transparent to-black/60 pointer-events-none" />
           </motion.div>
@@ -1651,11 +1650,10 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet,
     playSpinSound('egyptian');
     createSandStorm();
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -1724,11 +1722,10 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet,
     playSpinSound('egyptian');
     createSandStorm();
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -1797,7 +1794,7 @@ const PharaohSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet,
               transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
               className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(255,215,0,0.7)]'}`}
             >
-              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+              {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-amber-900/50 via-transparent to-orange-900/50 pointer-events-none" />
           </motion.div>
@@ -1901,11 +1898,10 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, s
     playSpinSound('cyber');
     createGlitch();
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -1972,11 +1968,10 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, s
     playSpinSound('cyber');
     createGlitch();
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -2058,7 +2053,7 @@ const CyberSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, s
                 textShadow: isSpinning ? 'none' : '0 0 30px currentColor, 0 0 70px currentColor'
               }}
             >
-              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+              {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-fuchsia-900/50 via-transparent to-indigo-900/50 pointer-events-none" />
           </motion.div>
@@ -2164,11 +2159,10 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, 
     playSpinSound('forest');
     createLeafFall();
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -2234,11 +2228,10 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, 
     playSpinSound('forest');
     createLeafFall();
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const results = [r0, r1, r2];
 
     [600, 1200, 2000].forEach((d, i) => {
       setTimeout(() => {
@@ -2317,7 +2310,7 @@ const ForestSlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, 
               transition={isSpinning ? { duration: 0.08, repeat: Infinity, ease: "linear" } : { duration: 0.35 }}
               className={`text-7xl md:text-9xl ${isSpinning ? 'blur-sm opacity-40' : 'drop-shadow-[0_0_35px_rgba(0,255,0,0.7)]'}`}
             >
-              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+              {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-green-900/50 via-transparent to-teal-900/50 pointer-events-none" />
           </motion.div>
@@ -2426,13 +2419,12 @@ const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet, show
     setTokens(t => t - bet);
     playSpinSound('default');
     
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const r3 = weightedPick(symbols, [r0, r1, r2], 0.02);
+    const r4 = weightedPick(symbols, [r0, r1, r2, r3], 0.02);
+    const results = [r0, r1, r2, r3, r4];
     
     // Staggered stops for dramatic effect
     [1000, 1800, 2600, 3400, 4200].forEach((d, i) => {
@@ -2548,13 +2540,12 @@ const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet, show
     setBonusSpins(prev => prev - 1);
     playSpinSound('default');
 
-    const results = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
+    const r0 = weightedPick(symbols);
+    const r1 = weightedPick(symbols, [r0], 0.02);
+    const r2 = weightedPick(symbols, [r0, r1], 0.02);
+    const r3 = weightedPick(symbols, [r0, r1, r2], 0.02);
+    const r4 = weightedPick(symbols, [r0, r1, r2, r3], 0.02);
+    const results = [r0, r1, r2, r3, r4];
 
     [800, 1500, 2200, 2900, 3600].forEach((d, i) => {
       setTimeout(() => {
@@ -2664,7 +2655,7 @@ const LuxeMega5Slot = ({ symbols, tokens, setTokens, minBet: initialMinBet, show
                 perspective: '1000px'
               }}
             >
-              {isSpinning ? symbols[Math.floor(Math.random() * symbols.length)] : symbol}
+              {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             
             {/* Speed lines effect during spin */}
