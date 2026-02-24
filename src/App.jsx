@@ -154,24 +154,24 @@ const Card = ({ card, hidden, index }) => (
   <motion.div
     initial={{ y: -50, opacity: 0, rotate: -15 }}
     animate={{ y: 0, opacity: 1, rotate: 0 }}
-    className={`relative w-24 h-36 md:w-28 md:h-40 rounded-2xl border-2 shadow-2xl flex flex-col justify-between p-3 ${
+    className={`relative w-16 h-24 sm:w-20 sm:h-28 md:w-24 md:h-36 lg:w-28 lg:h-40 rounded-xl sm:rounded-2xl border-2 shadow-2xl flex flex-col justify-between p-2 sm:p-3 ${
       hidden ? 'bg-gradient-to-br from-zinc-800 to-black border-zinc-700' : 'bg-white border-zinc-200'
     }`}
   >
     {hidden ? (
       <div className="h-full w-full flex items-center justify-center opacity-30">
-        <Crown size={48} className="text-zinc-500" />
+        <Crown size={24} className="text-zinc-500" />
       </div>
     ) : (
       <>
-        <div className={`text-xl font-bold ${['hearts', 'diamonds'].includes(card.suit) ? 'text-red-600' : 'text-zinc-900'}`}>{card.value}</div>
+        <div className={`text-sm sm:text-base md:text-xl lg:text-xl font-bold ${['hearts', 'diamonds'].includes(card.suit) ? 'text-red-600' : 'text-zinc-900'}`}>{card.value}</div>
         <div className="flex justify-center">
-          {card.suit === 'hearts' && <Heart className="text-red-600" fill="currentColor" size={32} />}
-          {card.suit === 'diamonds' && <Diamond className="text-red-600" fill="currentColor" size={32} />}
-          {card.suit === 'spades' && <Spade className="text-zinc-900" fill="currentColor" size={32} />}
-          {card.suit === 'clubs' && <Club className="text-zinc-900" fill="currentColor" size={32} />}
+          {card.suit === 'hearts' && <Heart className="text-red-600" fill="currentColor" size={16} />}
+          {card.suit === 'diamonds' && <Diamond className="text-red-600" fill="currentColor" size={16} />}
+          {card.suit === 'spades' && <Spade className="text-zinc-900" fill="currentColor" size={16} />}
+          {card.suit === 'clubs' && <Club className="text-zinc-900" fill="currentColor" size={16} />}
         </div>
-        <div className={`text-xl font-bold rotate-180 ${['hearts', 'diamonds'].includes(card.suit) ? 'text-red-600' : 'text-zinc-900'}`}>{card.value}</div>
+        <div className={`text-sm sm:text-base md:text-xl lg:text-xl font-bold rotate-180 ${['hearts', 'diamonds'].includes(card.suit) ? 'text-red-600' : 'text-zinc-900'}`}>{card.value}</div>
       </>
     )}
   </motion.div>
@@ -212,20 +212,20 @@ const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
   const isOver = currentBet > maxTokens;
 
   return (
-    <div className={`flex flex-col gap-6 items-center w-full max-w-lg ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
-      <div className="flex items-center gap-4 w-full">
-        <button onClick={() => setBet(minBet)} disabled={disabled} className="bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Clear</button>
+    <div className={`flex flex-col gap-4 sm:gap-6 items-center w-full max-w-lg ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+      <div className="flex items-center gap-2 sm:gap-4 w-full">
+        <button onClick={() => setBet(minBet)} disabled={disabled} className="bg-white/5 hover:bg-white/10 px-3 sm:px-6 py-2 sm:py-4 rounded-xl sm:rounded-2xl border border-white/10 text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Clear</button>
 
-        <div className={`flex-1 bg-gradient-to-b from-zinc-900 to-black border-2 border-zinc-800 rounded-3xl p-5 flex flex-col items-center shadow-2xl ${isOver ? 'ring-2 ring-red-500' : isUnderMin ? 'ring-2 ring-yellow-400' : ''}`}>
-           <span className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.4em] mb-1">Current Stakes</span>
-           <div className="flex items-center gap-3">
-             <Coins size={20} className="text-yellow-500" />
-             <span className="text-4xl font-mono font-black tracking-tighter text-white">{(Number.isFinite(currentBet) ? currentBet : 0).toLocaleString()}</span>
+        <div className={`flex-1 bg-gradient-to-b from-zinc-900 to-black border-2 border-zinc-800 rounded-2xl sm:rounded-3xl p-3 sm:p-5 flex flex-col items-center shadow-2xl ${isOver ? 'ring-2 ring-red-500' : isUnderMin ? 'ring-2 ring-yellow-400' : ''}`}>
+           <span className="text-[8px] sm:text-[10px] font-black uppercase text-zinc-500 tracking-[0.4em] mb-1">Current Stakes</span>
+           <div className="flex items-center gap-2 sm:gap-3">
+             <Coins size={16} className="text-yellow-500" />
+             <span className="text-2xl sm:text-4xl font-mono font-black tracking-tighter text-white">{(Number.isFinite(currentBet) ? currentBet : 0).toLocaleString()}</span>
            </div>
 
-           <div className="mt-3 flex items-center gap-3 justify-center w-full">
-             <button onClick={() => changeBy(-step)} disabled={disabled || (Number.isFinite(currentBet) && currentBet <= minBet)} className="bg-white/5 hover:bg-white/10 px-3 py-2 rounded-xl border border-white/10 text-sm font-black text-white/60">
-               <Minus size={16} />
+           <div className="mt-2 sm:mt-3 flex items-center gap-2 sm:gap-3 justify-center w-full">
+             <button onClick={() => changeBy(-step)} disabled={disabled || (Number.isFinite(currentBet) && currentBet <= minBet)} className="bg-white/5 hover:bg-white/10 px-2 sm:px-3 py-1 sm:py-2 rounded-lg sm:rounded-xl border border-white/10 text-xs sm:text-sm font-black text-white/60">
+               <Minus size={12} />
              </button>
 
              <input
@@ -235,42 +235,42 @@ const BetSelector = ({ currentBet, setBet, minBet, maxTokens, disabled }) => {
                onChange={onInputChange}
                onBlur={onInputBlur}
                disabled={disabled}
-               className="bg-transparent text-2xl font-mono font-black tracking-tighter text-white text-center w-36 outline-none border-b border-white/10 py-2"
+               className="bg-transparent text-lg sm:text-2xl font-mono font-black tracking-tighter text-white text-center w-24 sm:w-36 outline-none border-b border-white/10 py-1 sm:py-2"
                aria-label="Bet amount"
              />
 
-             <button onClick={() => changeBy(step)} disabled={disabled || (Number.isFinite(currentBet) && currentBet >= maxTokens)} className="bg-white/5 hover:bg-white/10 px-3 py-2 rounded-xl border border-white/10 text-sm font-black text-white/60">
-               <Plus size={16} />
+             <button onClick={() => changeBy(step)} disabled={disabled || (Number.isFinite(currentBet) && currentBet >= maxTokens)} className="bg-white/5 hover:bg-white/10 px-2 sm:px-3 py-1 sm:py-2 rounded-lg sm:rounded-xl border border-white/10 text-xs sm:text-sm font-black text-white/60">
+               <Plus size={12} />
              </button>
            </div>
 
-           <div className="mt-2 text-xs flex justify-between w-full px-4">
+           <div className="mt-1 sm:mt-2 text-xs flex justify-between w-full px-2 sm:px-4">
              <div className={`${isUnderMin ? 'text-yellow-300' : 'text-zinc-500'}`}>Min: {minBet.toLocaleString()}</div>
              <div className={`${isOver ? 'text-red-300' : 'text-zinc-500'}`}>Balance: {maxTokens.toLocaleString()}</div>
            </div>
 
            {isOver && (
-             <div className="mt-2 text-sm font-black text-red-400">Insufficient funds</div>
+             <div className="mt-1 sm:mt-2 text-xs sm:text-sm font-black text-red-400">Insufficient funds</div>
            )}
            {isUnderMin && (
-             <div className="mt-2 text-sm font-black text-yellow-400">Below minimum bet</div>
+             <div className="mt-1 sm:mt-2 text-xs sm:text-sm font-black text-yellow-400">Below minimum bet</div>
            )}
         </div>
 
-        <button onClick={() => setBet(maxTokens)} disabled={disabled} className="bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Max</button>
+        <button onClick={() => setBet(maxTokens)} disabled={disabled} className="bg-white/5 hover:bg-white/10 px-3 sm:px-6 py-2 sm:py-4 rounded-xl sm:rounded-2xl border border-white/10 text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-[0.2em] transition-all">Max</button>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-4">
+      <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
         {chips.map(chip => (
           <button key={chip} onClick={() => addBet(chip)} disabled={disabled} className="group relative flex flex-col items-center">
-            <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center transition-all group-hover:scale-110 group-active:scale-95 shadow-xl
+            <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full border-4 flex items-center justify-center transition-all group-hover:scale-110 group-active:scale-95 shadow-xl
               ${chip === 10 ? 'border-blue-500/50 bg-blue-500/20' : 
                 chip === 50 ? 'border-red-500/50 bg-red-500/20' : 
                 chip === 100 ? 'border-emerald-500/50 bg-emerald-500/20' : 
                 chip === 500 ? 'border-purple-500/50 bg-purple-500/20' : 
                 'border-yellow-500/50 bg-yellow-500/20'}
             `}>
-              <span className="text-xs font-black text-white">{chip}</span>
+              <span className="text-[10px] sm:text-xs font-black text-white">{chip}</span>
             </div>
           </button>
         ))}
@@ -361,15 +361,15 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens, showNotification }) =
   };
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full">
-      <div className="relative w-80 h-80 md:w-[420px] md:h-[420px] rounded-full border-[12px] border-zinc-900 bg-[radial-gradient(ellipse_at_center,#0b1220,rgba(0,0,0,0.8))] flex items-center justify-center shadow-[0_0_120px_rgba(0,0,0,0.9)]">
+    <div className="flex flex-col items-center gap-6 sm:gap-8 w-full">
+      <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-[420px] md:h-[420px] rounded-full border-[8px] sm:border-[12px] border-zinc-900 bg-[radial-gradient(ellipse_at_center,#0b1220,rgba(0,0,0,0.8))] flex items-center justify-center shadow-[0_0_80px_sm:0_0_120px_rgba(0,0,0,0.9)]">
         {/* Pointer */}
-        <div className="absolute -top-4 w-full flex items-start justify-center pointer-events-none z-30">
-          <div className="w-0 h-0 border-l-8 border-r-8 border-b-16 border-l-transparent border-r-transparent border-b-white shadow-sm" />
+        <div className="absolute -top-3 sm:-top-4 w-full flex items-start justify-center pointer-events-none z-30">
+          <div className="w-0 h-0 border-l-6 sm:border-l-8 border-r-6 sm:border-r-8 border-b-12 sm:border-b-16 border-l-transparent border-r-transparent border-b-white shadow-sm" />
         </div>
 
         {/* Wheel */}
-        <motion.div animate={{ rotate: wheelRotation }} transition={{ duration: 3, ease: [0.22, 1, 0.36, 1] }} className="absolute inset-4 rounded-full overflow-hidden flex items-center justify-center">
+        <motion.div animate={{ rotate: wheelRotation }} transition={{ duration: 3, ease: [0.22, 1, 0.36, 1] }} className="absolute inset-3 sm:inset-4 rounded-full overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(${wheelGradient})`, transform: 'rotate(0deg)' }} />
 
           {/* separators and numbers overlay */}
@@ -378,59 +378,59 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens, showNotification }) =
               const angle = i * segmentAngle;
               return (
                 <div key={n} style={{ position: 'absolute', width: '100%', height: '100%', transform: `rotate(${angle}deg)` }}>
-                  <div style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%) rotate(-' + angle + 'deg)', fontSize: 10 }} className={`font-black ${n === 0 ? 'text-black' : redNumbers.includes(n) ? 'text-white' : 'text-white'}`}>
+                  <div style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%) rotate(-' + angle + 'deg)', fontSize: 8 }} className={`font-black ${n === 0 ? 'text-black' : redNumbers.includes(n) ? 'text-white' : 'text-white'}`}>
                     {n}
                   </div>
                   {/* thin separator */}
-                  <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 4, height: '6%', background: 'rgba(255,255,255,0.06)' }} />
+                  <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 2, height: '4%', background: 'rgba(255,255,255,0.06)' }} />
                 </div>
               );
             })}
           </div>
 
           {/* inner wheel center */}
-          <div className="w-32 h-32 rounded-full bg-gradient-to-b from-black/40 to-black/80 border border-white/5 flex items-center justify-center z-20">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-b from-black/40 to-black/80 border border-white/5 flex items-center justify-center z-20">
             <div className="text-center">
-              <div className="text-4xl font-black text-white">Luxe</div>
-              <div className="text-xs uppercase tracking-widest text-zinc-400">Prestige</div>
+              <div className="text-2xl sm:text-4xl font-black text-white">Luxe</div>
+              <div className="text-[8px] sm:text-xs uppercase tracking-widest text-zinc-400">Prestige</div>
             </div>
           </div>
         </motion.div>
 
         {/* wheel rim */}
-        <div className="absolute inset-0 rounded-full pointer-events-none" style={{ boxShadow: 'inset 0 16px 25px rgba(0,0,0,0.6), 0 10px 40px rgba(16,24,39,0.6)' }} />
+        <div className="absolute inset-0 rounded-full pointer-events-none" style={{ boxShadow: 'inset 0 12px 20px rgba(0,0,0,0.6), 0 8px 30px rgba(16,24,39,0.6)' }} />
       </div>
 
       {/* Display result prominently */}
       <div className="text-center">
         <AnimatePresence mode="wait"><motion.div key={lastResult} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
-          <span className={`text-6xl md:text-7xl font-black mb-1 tracking-tighter ${lastResult !== null ? (lastResult === 0 ? 'text-emerald-500' : redNumbers.includes(lastResult) ? 'text-red-500' : 'text-white') : 'text-zinc-800'}`}>
+          <span className={`text-4xl sm:text-6xl md:text-7xl font-black mb-1 tracking-tighter ${lastResult !== null ? (lastResult === 0 ? 'text-emerald-500' : redNumbers.includes(lastResult) ? 'text-red-500' : 'text-white') : 'text-zinc-800'}`}>
             {spinning ? '...' : (lastResult ?? '--')}
           </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.8em] text-zinc-500">{spinning ? 'SPINNING' : 'RESULT'}</span>
+          <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.8em] text-zinc-500">{spinning ? 'SPINNING' : 'RESULT'}</span>
         </motion.div></AnimatePresence>
       </div>
 
       {/* Bet type controls */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 w-full max-w-3xl">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 w-full max-w-3xl">
         {['red','black','even','odd','1-18','19-36','1st-dozen','2nd-dozen','3rd-dozen','col-1','col-2','col-3'].map(type => (
-          <button key={type} onClick={() => { setBetType(type); setSelectedNumber(null); setShowNumberPicker(false); }} className={`py-3 rounded-2xl font-black uppercase text-xs tracking-widest border transition-all ${betType === type ? 'bg-white text-black border-white scale-105' : 'bg-black/40 border-zinc-800 text-zinc-300 hover:border-zinc-700'}`}>
+          <button key={type} onClick={() => { setBetType(type); setSelectedNumber(null); setShowNumberPicker(false); }} className={`py-2 sm:py-3 rounded-xl sm:rounded-2xl font-black uppercase text-[10px] sm:text-xs tracking-widest border transition-all ${betType === type ? 'bg-white text-black border-white scale-105' : 'bg-black/40 border-zinc-800 text-zinc-300 hover:border-zinc-700'}`}>
             {type.replace('-', ' ').toUpperCase()}
           </button>
         ))}
       </div>
 
       {/* Number picker toggle and grid */}
-      <div className="w-full max-w-3xl flex flex-col items-center gap-4">
+      <div className="w-full max-w-3xl flex flex-col items-center gap-3 sm:gap-4">
         <div className="w-full flex items-center justify-between">
-          <button onClick={() => { setShowNumberPicker(s => !s); setSelectedNumber(null); setBetType('red'); }} className="py-2 px-4 rounded-lg bg-black/50 border border-white/5 text-sm font-black">{showNumberPicker ? 'Hide Numbers' : 'Pick Specific Number'}</button>
-          {selectedNumber !== null && <div className="text-sm font-black">Selected: <span className={`px-3 py-1 rounded-full ${highlightClass(selectedNumber)}`}>{selectedNumber}</span></div>}
+          <button onClick={() => { setShowNumberPicker(s => !s); setSelectedNumber(null); setBetType('red'); }} className="py-1 sm:py-2 px-3 sm:px-4 rounded-lg bg-black/50 border border-white/5 text-xs sm:text-sm font-black">{showNumberPicker ? 'Hide Numbers' : 'Pick Specific Number'}</button>
+          {selectedNumber !== null && <div className="text-xs sm:text-sm font-black">Selected: <span className={`px-2 sm:px-3 py-1 rounded-full ${highlightClass(selectedNumber)}`}>{selectedNumber}</span></div>}
         </div>
 
         {showNumberPicker && (
-          <div className="grid grid-cols-7 gap-2 w-full">
+          <div className="grid grid-cols-6 sm:grid-cols-7 gap-1 sm:gap-2 w-full">
             {Array.from({ length: 37 }).map((_, n) => (
-              <button key={n} onClick={() => { setSelectedNumber(n); setBetType(n); }} disabled={spinning} className={`py-2 rounded-lg font-black text-sm ${n === 0 ? 'bg-emerald-500 text-black' : redNumbers.includes(n) ? 'bg-red-600 text-white' : 'bg-zinc-900/80 text-white'}`}>{n}</button>
+              <button key={n} onClick={() => { setSelectedNumber(n); setBetType(n); }} disabled={spinning} className={`py-1 sm:py-2 rounded-lg font-black text-[10px] sm:text-sm ${n === 0 ? 'bg-emerald-500 text-black' : redNumbers.includes(n) ? 'bg-red-600 text-white' : 'bg-zinc-900/80 text-white'}`}>{n}</button>
             ))}
           </div>
         )}
@@ -438,11 +438,11 @@ const RouletteTable = ({ initialMinBet, tokens, setTokens, showNotification }) =
 
       <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={spinning} />
 
-      <button onClick={spin} disabled={spinning} className="group w-full max-w-md bg-white text-black py-5 rounded-[1.6rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl disabled:opacity-50 transition-all hover:bg-zinc-100">
+      <button onClick={spin} disabled={spinning} className="group w-full max-w-md bg-white text-black py-3 sm:py-5 rounded-xl sm:rounded-[1.6rem] font-black text-lg sm:text-xl uppercase tracking-[0.2em] shadow-2xl disabled:opacity-50 transition-all hover:bg-zinc-100">
         {spinning ? 'Spinning...' : 'Spin the Wheel'}
       </button>
 
-      {message && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-black italic tracking-tight text-white">{message}</motion.div>}
+      {message && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-lg sm:text-2xl font-black italic tracking-tight text-white">{message}</motion.div>}
     </div>
   );
 };
@@ -513,11 +513,11 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNo
     }
   };
   return (
-    <div className="flex flex-col items-center gap-10 p-12 bg-gradient-to-b from-zinc-900 to-black rounded-[4rem] border border-white/5 relative shadow-[0_0_100px_rgba(0,0,0,0.8)]">
-      <div className="flex gap-4 md:gap-8 bg-black/40 p-4 rounded-[2.5rem] border border-white/5">
+    <div className="flex flex-col items-center gap-6 sm:gap-10 p-6 sm:p-12 bg-gradient-to-b from-zinc-900 to-black rounded-[2rem] sm:rounded-[4rem] border border-white/5 relative shadow-[0_0_100px_rgba(0,0,0,0.8)]">
+      <div className="flex gap-2 sm:gap-4 md:gap-8 bg-black/40 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5">
         {reels.map((symbol, i) => (
-          <div key={i} className="relative w-28 h-48 md:w-36 md:h-56 bg-gradient-to-b from-zinc-900 to-black rounded-[2rem] overflow-hidden border border-white/10 flex items-center justify-center">
-            <motion.div key={isSpinning ? `spin-${i}` : symbol} initial={isSpinning ? { y: -400 } : { y: -50 }} animate={{ y: 0 }} transition={{ repeat: isSpinning ? Infinity : 0, duration: isSpinning ? 0.06 : 0.4, ease: isSpinning ? "linear" : "backOut" }} className={`text-6xl md:text-8xl ${isSpinning ? 'blur-xl opacity-20' : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>
+          <div key={i} className="relative w-20 h-32 sm:w-28 sm:h-48 md:w-36 md:h-56 bg-gradient-to-b from-zinc-900 to-black rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border border-white/10 flex items-center justify-center">
+            <motion.div key={isSpinning ? `spin-${i}` : symbol} initial={isSpinning ? { y: -400 } : { y: -50 }} animate={{ y: 0 }} transition={{ repeat: isSpinning ? Infinity : 0, duration: isSpinning ? 0.06 : 0.4, ease: isSpinning ? "linear" : "backOut" }} className={`text-4xl sm:text-6xl md:text-8xl ${isSpinning ? 'blur-xl opacity-20' : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>
               {isSpinning ? weightedPick(symbols) : symbol}
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none" />
@@ -525,13 +525,13 @@ const SlotMachine = ({ symbols, tokens, setTokens, minBet: initialMinBet, showNo
         ))}
       </div>
       <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={isSpinning} />
-      <button onClick={spin} disabled={isSpinning} className="group relative w-full h-28 rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all">
+      <button onClick={spin} disabled={isSpinning} className="group relative w-full h-20 sm:h-28 rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl active:scale-95 transition-all">
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-100 to-white group-hover:from-white group-hover:to-zinc-100 transition-all" />
-        <span className="relative z-10 text-black font-black text-4xl italic uppercase tracking-[0.3em]">Ignite</span>
+        <span className="relative z-10 text-black font-black text-2xl sm:text-4xl italic uppercase tracking-[0.3em]">Ignite</span>
       </button>
       <AnimatePresence>
         {winMsg && (
-          <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className={`absolute -top-16 z-50 px-12 py-5 rounded-full font-black text-2xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-emerald-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.5)]'}`}>
+          <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className={`absolute -top-12 sm:-top-16 z-50 px-6 sm:px-12 py-3 sm:py-5 rounded-full font-black text-lg sm:text-2xl ${winMsg && (winMsg.includes('INSUFFICIENT') || winMsg.startsWith('MINIMUM')) ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-emerald-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.5)]'}`}>
             {winMsg}
           </motion.div>
         )}
@@ -2799,26 +2799,26 @@ const BlackjackTable = ({ initialMinBet, tokens, setTokens, showNotification }) 
     }
   }, [status]);
   return (
-    <div className="w-full max-w-4xl flex flex-col items-center gap-14">
-      <div className="flex flex-col items-center gap-6">
-        <span className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.6em] bg-white/5 px-4 py-1 rounded-full border border-white/5">The House ({status === 'playing' ? '?' : calcHand(dealerHand)})</span>
-        <div className="flex gap-4 min-h-[160px]">{dealerHand.map((c, i) => <Card key={c.id} card={c} hidden={status === 'playing' && i === 1} index={i} />)}</div>
+    <div className="w-full max-w-4xl flex flex-col items-center gap-8 sm:gap-14">
+      <div className="flex flex-col items-center gap-4 sm:gap-6">
+        <span className="text-zinc-500 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.6em] bg-white/5 px-3 sm:px-4 py-1 rounded-full border border-white/5">The House ({status === 'playing' ? '?' : calcHand(dealerHand)})</span>
+        <div className="flex gap-2 sm:gap-4 min-h-[120px] sm:min-h-[160px]">{dealerHand.map((c, i) => <Card key={c.id} card={c} hidden={status === 'playing' && i === 1} index={i} />)}</div>
       </div>
       <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
-      <div className="flex flex-col items-center gap-6">
-        <div className="flex gap-4 min-h-[160px]">{playerHand.map((c, i) => <Card key={c.id} card={c} index={i} />)}</div>
-        <span className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.6em] bg-white/5 px-4 py-1 rounded-full border border-white/5">Guest ({calcHand(playerHand)})</span>
+      <div className="flex flex-col items-center gap-4 sm:gap-6">
+        <div className="flex gap-2 sm:gap-4 min-h-[120px] sm:min-h-[160px]">{playerHand.map((c, i) => <Card key={c.id} card={c} index={i} />)}</div>
+        <span className="text-zinc-500 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.6em] bg-white/5 px-3 sm:px-4 py-1 rounded-full border border-white/5">Guest ({calcHand(playerHand)})</span>
       </div>
       <BetSelector currentBet={bet} setBet={setBet} minBet={initialMinBet} maxTokens={tokens} disabled={status === 'playing'} />
-      <div className="flex gap-6">
+      <div className="flex gap-3 sm:gap-6 flex-wrap justify-center">
         {status === 'idle' || status === 'result' ? (
-          <button onClick={startRound} className="bg-white text-black px-24 py-6 rounded-3xl font-black text-2xl hover:bg-zinc-200 transition-all shadow-2xl tracking-widest">DEAL</button>
+          <button onClick={startRound} className="bg-white text-black px-12 sm:px-24 py-3 sm:py-6 rounded-2xl sm:rounded-3xl font-black text-lg sm:text-2xl hover:bg-zinc-200 transition-all shadow-2xl tracking-widest">DEAL</button>
         ) : (
-          <><button onClick={hit} className="bg-zinc-800 text-white px-16 py-6 rounded-3xl font-black text-xl border border-zinc-700 hover:bg-zinc-700 transition-all">HIT</button>
-            <button onClick={stand} className="bg-white text-black px-16 py-6 rounded-3xl font-black text-xl hover:bg-zinc-200 transition-all shadow-xl">STAND</button></>
+          <><button onClick={hit} className="bg-zinc-800 text-white px-8 sm:px-16 py-3 sm:py-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl border border-zinc-700 hover:bg-zinc-700 transition-all">HIT</button>
+            <button onClick={stand} className="bg-white text-black px-8 sm:px-16 py-3 sm:py-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl hover:bg-zinc-200 transition-all shadow-xl">STAND</button></>
         )}
       </div>
-      {message && <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-5xl font-black italic tracking-tighter text-white">{message}</motion.div>}
+      {message && <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl sm:text-5xl font-black italic tracking-tighter text-white">{message}</motion.div>}
     </div>
   );
 };
@@ -2826,33 +2826,33 @@ const BlackjackTable = ({ initialMinBet, tokens, setTokens, showNotification }) 
 // --- NEW ADSENSE PAGES ---
 
 const LandingPage = ({ onEnter }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-[80vh] flex flex-col items-center justify-center text-center px-6">
-    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="space-y-8">
-      <div className="flex justify-center mb-10"><div className="bg-white p-6 rounded-[2rem] shadow-[0_0_50px_rgba(255,255,255,0.2)]"><Crown size={80} className="text-black" /></div></div>
-      <h1 className="text-6xl md:text-9xl font-black italic tracking-tighter leading-[0.8] text-white">REFINEMENT <br/><span className="text-zinc-500">DEFINED.</span></h1>
-      <p className="text-zinc-400 text-xl md:text-2xl max-w-2xl mx-auto italic font-medium leading-relaxed">Welcome to the world's most exclusive social gaming simulation. Where probability meets prestige.</p>
-      <div className="pt-10">
-        <button onClick={onEnter} className="group relative bg-white text-black px-16 py-8 rounded-full font-black text-2xl tracking-[0.2em] uppercase overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.3)]">
-          <span className="relative z-10 flex items-center gap-4">Enter Members Lounge <ChevronRight /></span>
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 sm:px-6">
+    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="space-y-6 sm:space-y-8">
+      <div className="flex justify-center mb-6 sm:mb-10"><div className="bg-white p-4 sm:p-6 rounded-[2rem] shadow-[0_0_50px_rgba(255,255,255,0.2)]"><Crown size={48} className="text-black" /></div></div>
+      <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black italic tracking-tighter leading-[0.8] text-white">REFINEMENT <br/><span className="text-zinc-500">DEFINED.</span></h1>
+      <p className="text-zinc-400 text-base sm:text-lg md:text-xl lg:text-2xl max-w-2xl mx-auto italic font-medium leading-relaxed">Welcome to the world's most exclusive social gaming simulation. Where probability meets prestige.</p>
+      <div className="pt-6 sm:pt-10">
+        <button onClick={onEnter} className="group relative bg-white text-black px-8 sm:px-12 lg:px-16 py-4 sm:py-6 lg:py-8 rounded-full font-black text-lg sm:text-xl lg:text-2xl tracking-[0.2em] uppercase overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.3)]">
+          <span className="relative z-10 flex items-center gap-2 sm:gap-4">Enter Members Lounge <ChevronRight size={16} /></span>
           <div className="absolute inset-0 bg-gradient-to-r from-zinc-200 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
       </div>
     </motion.div>
-    <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl w-full">
-      <div className="flex flex-col items-center gap-4 p-8 border border-white/5 rounded-[2rem] bg-white/5">
-        <ShieldCheck className="text-zinc-500" size={40} />
-        <h3 className="font-black text-lg">Fair Simulation</h3>
-        <p className="text-zinc-500 text-sm">Advanced RNG algorithms ensuring truly random outcomes for every guest.</p>
+    <div className="mt-12 sm:mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 max-w-5xl w-full">
+      <div className="flex flex-col items-center gap-3 sm:gap-4 p-4 sm:p-6 lg:p-8 border border-white/5 rounded-[2rem] bg-white/5">
+        <ShieldCheck className="text-zinc-500" size={32} />
+        <h3 className="font-black text-sm sm:text-base lg:text-lg">Fair Simulation</h3>
+        <p className="text-zinc-500 text-xs sm:text-sm">Advanced RNG algorithms ensuring truly random outcomes for every guest.</p>
       </div>
-      <div className="flex flex-col items-center gap-4 p-8 border border-white/5 rounded-[2rem] bg-white/5">
-        <Lock className="text-zinc-500" size={40} />
-        <h3 className="font-black text-lg">Social Only</h3>
-        <p className="text-zinc-500 text-sm">Strictly zero-risk play with virtual tokens. No real currency involved.</p>
+      <div className="flex flex-col items-center gap-3 sm:gap-4 p-4 sm:p-6 lg:p-8 border border-white/5 rounded-[2rem] bg-white/5">
+        <Lock className="text-zinc-500" size={32} />
+        <h3 className="font-black text-sm sm:text-base lg:text-lg">Social Only</h3>
+        <p className="text-zinc-500 text-xs sm:text-sm">Strictly zero-risk play with virtual tokens. No real currency involved.</p>
       </div>
-      <div className="flex flex-col items-center gap-4 p-8 border border-white/5 rounded-[2rem] bg-white/5">
-        <UserCheck className="text-zinc-500" size={40} />
-        <h3 className="font-black text-lg">Elite Support</h3>
-        <p className="text-zinc-500 text-sm">24/7 technical assistance for all our premier club members.</p>
+      <div className="flex flex-col items-center gap-3 sm:gap-4 p-4 sm:p-6 lg:p-8 border border-white/5 rounded-[2rem] bg-white/5">
+        <UserCheck className="text-zinc-500" size={32} />
+        <h3 className="font-black text-sm sm:text-base lg:text-lg">Elite Support</h3>
+        <p className="text-zinc-500 text-xs sm:text-sm">24/7 technical assistance for all our premier club members.</p>
       </div>
     </div>
   </motion.div>
@@ -3028,53 +3028,53 @@ export default function App() {  // Global notification state (fixed, always vis
   return (
     <div className="min-h-screen bg-[#020202] text-zinc-100 font-sans selection:bg-white selection:text-black">
       {/* Premium Header */}
-      <nav className="sticky top-0 bg-black/80 backdrop-blur-2xl border-b border-white/5 px-8 py-6 z-50">
+      <nav className="sticky top-0 bg-black/80 backdrop-blur-2xl border-b border-white/5 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div onClick={() => navigateTo('landing')} className="flex items-center gap-3 cursor-pointer group">
-            <div className="bg-white p-2 rounded-xl group-hover:scale-110 transition-transform"><Crown size={24} className="text-black" /></div>
+          <div onClick={() => navigateTo('landing')} className="flex items-center gap-2 sm:gap-3 cursor-pointer group">
+            <div className="bg-white p-1.5 sm:p-2 rounded-xl group-hover:scale-110 transition-transform"><Crown size={20} className="sm:size-6 text-black" /></div>
             <div className="flex flex-col leading-none">
-              <span className="text-2xl font-black italic tracking-tighter">LUXEBLACK</span>
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-500">Gaming Studio</span>
+              <span className="text-lg sm:text-2xl font-black italic tracking-tighter">LUXEBLACK</span>
+              <span className="text-[6px] sm:text-[8px] font-black uppercase tracking-[0.4em] text-zinc-500">Gaming Studio</span>
             </div>
           </div>
           
-          <div className="hidden md:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
+          <div className="hidden md:flex items-center gap-6 lg:gap-12 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
             <button onClick={() => navigateTo('lobby')} className={`hover:text-white transition-colors ${view === 'lobby' ? 'text-white' : ''}`}>Floor Games</button>
             <a href="/privacy.html" target="_blank" className="hover:text-white transition-colors">Privacy</a>
             <a href="/terms.html" target="_blank" className="hover:text-white transition-colors">Terms</a>
             <button onClick={() => navigateTo('responsible')} className={`hover:text-white transition-colors ${view === 'responsible' ? 'text-white' : ''}`}>Safe Play</button>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-full flex items-center gap-6 shadow-inner">
-                <div className="flex items-center gap-2">
-                <Coins size={20} className="text-yellow-500" />
-                <span className="font-mono font-black text-2xl tracking-tighter">{tokens.toLocaleString()}</span>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="bg-zinc-900 border border-zinc-800 px-3 sm:px-6 py-2 sm:py-3 rounded-full flex items-center gap-3 sm:gap-6 shadow-inner">
+                <div className="flex items-center gap-1 sm:gap-2">
+                <Coins size={16} className="sm:size-5 text-yellow-500" />
+                <span className="font-mono font-black text-lg sm:text-2xl tracking-tighter">{tokens.toLocaleString()}</span>
                 </div>
-                <button onClick={() => setShowAdModal(true)} className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all shadow-xl"><Plus size={20} /></button>
+                <button onClick={() => setShowAdModal(true)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all shadow-xl"><Plus size={16} className="sm:size-5" /></button>
             </div>
             {userProfile ? (
-              <div className="hidden md:flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+              <div className="hidden md:flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 bg-white/5 px-3 sm:px-4 py-2 rounded-full border border-white/10">
                   {userProfile.picture ? (
-                    <img src={userProfile.picture} alt={userProfile.name} className="w-8 h-8 rounded-full" />
+                    <img src={userProfile.picture} alt={userProfile.name} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
                   ) : (
-                    <User size={20} className="text-zinc-400" />
+                    <User size={16} className="sm:size-5 text-zinc-400" />
                   )}
-                  <span className="text-sm font-black text-white/80 max-w-[120px] truncate">{userProfile.name}</span>
+                  <span className="text-xs sm:text-sm font-black text-white/80 max-w-[80px] sm:max-w-[120px] truncate">{userProfile.name}</span>
                 </div>
-                <button onClick={handleSignOut} className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-full flex items-center gap-2 transition-all border border-zinc-700">
-                  <LogOut size={16} />
-                  <span className="text-xs font-black uppercase tracking-wider">Sign Out</span>
+                <button onClick={handleSignOut} className="bg-zinc-800 hover:bg-zinc-700 text-white px-2 sm:px-4 py-2 rounded-full flex items-center gap-1 sm:gap-2 transition-all border border-zinc-700">
+                  <LogOut size={12} className="sm:size-4" />
+                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Sign Out</span>
                 </button>
               </div>
             ) : (
-              <button onClick={login} className="hidden md:flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-black text-sm uppercase tracking-wider hover:bg-zinc-200 transition-all shadow-xl">
-                <LogIn size={18} />
+              <button onClick={login} className="hidden md:flex items-center gap-1 sm:gap-2 bg-white text-black px-3 sm:px-6 py-2 sm:py-3 rounded-full font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-zinc-200 transition-all shadow-xl">
+                <LogIn size={14} className="sm:size-5" />
                 Sign In
               </button>
             )}
-            <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden text-white"><Menu size={32} /></button>
+            <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden text-white"><Menu size={24} className="sm:size-8" /></button>
           </div>
         </div>
       </nav>
@@ -3082,54 +3082,54 @@ export default function App() {  // Global notification state (fixed, always vis
       {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenu && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-[60] bg-black p-10 flex flex-col gap-10 text-3xl font-black italic uppercase tracking-tighter">
-            <button onClick={() => setMobileMenu(false)} className="self-end"><X size={40} /></button>
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-[60] bg-black p-6 sm:p-10 flex flex-col gap-6 sm:gap-10 text-xl sm:text-3xl font-black italic uppercase tracking-tighter">
+            <button onClick={() => setMobileMenu(false)} className="self-end p-2"><X size={32} className="sm:size-10" /></button>
             {userProfile ? (
               <>
                 <div className="flex items-center gap-3 pb-4 border-b border-white/10">
                   {userProfile.picture ? (
-                    <img src={userProfile.picture} alt={userProfile.name} className="w-12 h-12 rounded-full" />
+                    <img src={userProfile.picture} alt={userProfile.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full" />
                   ) : (
-                    <User size={32} className="text-zinc-400" />
+                    <User size={28} className="sm:size-8 text-zinc-400" />
                   )}
-                  <span className="text-xl">{userProfile.name}</span>
+                  <span className="text-lg sm:text-xl">{userProfile.name}</span>
                 </div>
-                <button onClick={() => { handleSignOut(); setMobileMenu(false); }}>Sign Out</button>
+                <button onClick={() => { handleSignOut(); setMobileMenu(false); }} className="text-left py-3 sm:py-4">Sign Out</button>
               </>
             ) : (
-              <button onClick={() => { login(); setMobileMenu(false); }}>Sign In</button>
+              <button onClick={() => { login(); setMobileMenu(false); }} className="text-left py-3 sm:py-4">Sign In</button>
             )}
-            <button onClick={() => navigateTo('lobby')}>Enter Casino</button>
-            <a href="/privacy.html" target="_blank" className="block">Privacy Policy</a>
-            <a href="/terms.html" target="_blank" className="block">Terms of Service</a>
-            <button onClick={() => navigateTo('responsible')}>Responsible Gaming</button>
+            <button onClick={() => navigateTo('lobby')} className="text-left py-3 sm:py-4">Enter Casino</button>
+            <a href="/privacy.html" target="_blank" className="block py-3 sm:py-4">Privacy Policy</a>
+            <a href="/terms.html" target="_blank" className="block py-3 sm:py-4">Terms of Service</a>
+            <button onClick={() => navigateTo('responsible')} className="text-left py-3 sm:py-4">Responsible Gaming</button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <main className="max-w-7xl mx-auto p-8 md:p-16">
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 xl:p-16">
         <AnimatePresence mode="wait">
           {view === 'landing' && <LandingPage key="landing" onEnter={() => navigateTo('lobby')} />}
           
           {view === 'lobby' && (
             <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-24">
-              <div className="text-center space-y-6">
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-block px-4 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Established 2024</motion.div>
-                <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
+              <div className="text-center space-y-4 sm:space-y-6">
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-block px-3 sm:px-4 py-1 rounded-full border border-white/10 bg-white/5 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Established 2024</motion.div>
+                <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
                   Define Your <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-400 to-zinc-600">Fortune.</span>
                 </h1>
-                <p className="text-zinc-500 max-w-2xl mx-auto font-medium text-lg italic">"A premier collection of high-performance probability simulations for the sophisticated guest."</p>
+                <p className="text-zinc-500 max-w-2xl mx-auto font-medium text-sm sm:text-base md:text-lg italic">"A premier collection of high-performance probability simulations for the sophisticated guest."</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                 {GAMES.map(g => (
-                  <motion.div key={g.id} whileHover={{ y: -15, scale: 1.02 }} onClick={() => startPlaying(g)} className={`h-[450px] rounded-[3.5rem] p-12 cursor-pointer bg-gradient-to-br ${g.colors} border border-white/5 shadow-2xl relative overflow-hidden group transition-all`}>
+                  <motion.div key={g.id} whileHover={{ y: -15, scale: 1.02 }} onClick={() => startPlaying(g)} className={`h-[350px] sm:h-[400px] lg:h-[450px] rounded-[2.5rem] sm:rounded-[3rem] p-6 sm:p-8 lg:p-12 cursor-pointer bg-gradient-to-br ${g.colors} border border-white/5 shadow-2xl relative overflow-hidden group transition-all`}>
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                     <div className="relative z-10 flex flex-col justify-between h-full">
-                      <div className="w-20 h-20 bg-black/40 backdrop-blur-2xl rounded-3xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">{g.icon}</div>
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black/40 backdrop-blur-2xl rounded-2xl sm:rounded-3xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">{g.icon}</div>
                       <div className="space-y-2">
-                        <h3 className="text-4xl font-black italic leading-none">{g.name}</h3>
-                        <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-[0.3em]"><TrendingUp size={14} /> Wager Min: {g.minBet} </div>
-                        <div className="pt-4 opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white bg-white/10 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest">Enter Suite</span></div>
+                        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black italic leading-none">{g.name}</h3>
+                        <div className="flex items-center gap-2 sm:gap-3 text-white/40 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em]"><TrendingUp size={12} /> Wager Min: {g.minBet} </div>
+                        <div className="pt-2 sm:pt-4 opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white bg-white/10 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest">Enter Suite</span></div>
                       </div>
                     </div>
                   </motion.div>
@@ -3139,12 +3139,12 @@ export default function App() {  // Global notification state (fixed, always vis
           )}
 
           {view === 'game' && (
-            <motion.div key="game" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-20">
-              <div className="w-full flex justify-between items-center border-b border-white/5 pb-10">
-                <button onClick={() => navigateTo('lobby')} className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors font-black uppercase tracking-[0.3em] text-[10px]"><ChevronLeft size={20}/> Exit Suite</button>
+            <motion.div key="game" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-12 sm:gap-20">
+              <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-6 sm:pb-10">
+                <button onClick={() => navigateTo('lobby')} className="flex items-center gap-2 sm:gap-3 text-zinc-500 hover:text-white transition-colors font-black uppercase tracking-[0.3em] text-[8px] sm:text-[10px]"><ChevronLeft size={16} /> Exit Suite</button>
                 <div className="text-right">
-                    <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">Active Simulation</span>
-                  <h2 className="text-5xl font-black italic tracking-tighter uppercase">{activeGame.name}</h2>
+                    <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600 block">Active Simulation</span>
+                  <h2 className="text-3xl sm:text-5xl font-black italic tracking-tighter uppercase">{activeGame.name}</h2>
                 </div>
               </div>
               {activeGame.type === 'blackjack' && <BlackjackTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} showNotification={showNotification} />}
@@ -3157,11 +3157,11 @@ export default function App() {  // Global notification state (fixed, always vis
               {activeGame.type === 'forest-slots' && <ForestSlotMachine symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
               {activeGame.type === 'luxe-mega-5' && <LuxeMega5Slot symbols={activeGame.symbols} tokens={tokens} setTokens={setTokens} minBet={activeGame.minBet} showNotification={showNotification} />}
               {activeGame.type === 'roulette' && <RouletteTable initialMinBet={activeGame.minBet} tokens={tokens} setTokens={setTokens} showNotification={showNotification} />}
-              <div className="w-full max-w-3xl bg-zinc-900/50 border border-white/5 p-12 rounded-[3rem] flex flex-col md:flex-row gap-10">
-                <div className="w-20 h-20 bg-white/5 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-white/5"><Info className="text-zinc-400" size={32} /></div>
-                <div className="space-y-4">
-                  <h4 className="font-black uppercase text-xs tracking-[0.4em] text-zinc-400">Guest Strategy Brief</h4>
-                  <p className="text-zinc-500 text-lg italic leading-relaxed">"{activeGame.guide}"</p>
+              <div className="w-full max-w-3xl bg-zinc-900/50 border border-white/5 p-6 sm:p-12 rounded-[2rem] sm:rounded-[3rem] flex flex-col md:flex-row gap-6 sm:gap-10">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 rounded-[1rem] sm:rounded-[1.5rem] flex items-center justify-center shrink-0 border border-white/5"><Info className="text-zinc-400" size={24} /></div>
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="font-black uppercase text-[10px] sm:text-xs tracking-[0.4em] text-zinc-400">Guest Strategy Brief</h4>
+                  <p className="text-zinc-500 text-sm sm:text-lg italic leading-relaxed">"{activeGame.guide}"</p>
                 </div>
               </div>
             </motion.div>
@@ -3227,18 +3227,18 @@ export default function App() {  // Global notification state (fixed, always vis
       </footer>
 
       {showAdModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-3xl">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-zinc-900 border border-white/5 w-full max-w-sm rounded-[4rem] p-12 text-center space-y-10 shadow-[0_0_100px_rgba(255,255,255,0.05)]">
-            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/10"><Coins size={48} className="text-yellow-500" /></div>
-            <div className="space-y-4">
-              <h3 className="text-4xl font-black italic tracking-tighter">REPLENISH</h3>
-              <p className="text-zinc-500 text-sm italic font-medium">Allow us to grant a 1,000 token courtesy credit upon viewing a brief brand exhibition.</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/95 backdrop-blur-3xl">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-zinc-900 border border-white/5 w-full max-w-sm rounded-[2rem] sm:rounded-[4rem] p-8 sm:p-12 text-center space-y-6 sm:space-y-10 shadow-[0_0_100px_rgba(255,255,255,0.05)]">
+            <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/10"><Coins size={32} className="text-yellow-500" /></div>
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-2xl sm:text-4xl font-black italic tracking-tighter">REPLENISH</h3>
+              <p className="text-zinc-500 text-xs sm:text-sm italic font-medium">Allow us to grant a 1,000 token courtesy credit upon viewing a brief brand exhibition.</p>
             </div>
-            <div className="space-y-4">
-              <button onClick={handleWatchAd} disabled={isAdLoading} className="w-full bg-white text-black py-6 rounded-3xl font-black text-xl flex items-center justify-center gap-3 hover:bg-zinc-200 transition-all shadow-xl">
-                {isAdLoading ? <div className="w-8 h-8 border-4 border-black/20 border-t-black rounded-full animate-spin" /> : <><Tv size={24} /> Begin Exhibition</>}
+            <div className="space-y-3 sm:space-y-4">
+              <button onClick={handleWatchAd} disabled={isAdLoading} className="w-full bg-white text-black py-3 sm:py-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-zinc-200 transition-all shadow-xl">
+                {isAdLoading ? <div className="w-6 h-6 sm:w-8 sm:h-8 border-3 sm:border-4 border-black/20 border-t-black rounded-full animate-spin" /> : <><Tv size={16} /> Begin Exhibition</>}
               </button>
-              <button onClick={() => setShowAdModal(false)} className="text-zinc-600 font-black uppercase text-[10px] tracking-[0.4em] hover:text-white transition-colors">Decline Offer</button>
+              <button onClick={() => setShowAdModal(false)} className="text-zinc-600 font-black uppercase text-[8px] sm:text-[10px] tracking-[0.4em] hover:text-white transition-colors">Decline Offer</button>
             </div>
           </motion.div>
         </div>
